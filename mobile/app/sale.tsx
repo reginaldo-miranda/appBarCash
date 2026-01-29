@@ -417,6 +417,7 @@ export default function SaleScreen() {
     { key: 'dinheiro', label: 'Dinheiro', icon: 'cash' },
     { key: 'cartao', label: 'Cartão', icon: 'card' },
     { key: 'pix', label: 'PIX', icon: 'phone-portrait' },
+    { key: 'cashback', label: 'Cashback', icon: 'gift' },
   ];
 
   const loadSale = useCallback(async () => {
@@ -1645,11 +1646,11 @@ export default function SaleScreen() {
             { tipo !== 'mesa' ? (
              <>
              <Text style={styles.modalLabel}>Cliente:</Text>
-             <TouchableOpacity
+            <TouchableOpacity
               style={[
                 styles.paymentOption,
                 selectedCliente && styles.paymentOptionSelected,
-                { marginBottom: 16, justifyContent: 'space-between' }
+                { marginBottom: 8, justifyContent: 'space-between' }
               ]}
               onPress={() => setShowClientModal(true)}
             >
@@ -1668,6 +1669,14 @@ export default function SaleScreen() {
               </View>
               <Ionicons name="search" size={18} color={selectedCliente ? '#2196F3' : '#999'} />
             </TouchableOpacity>
+
+            {selectedCliente && (
+               <View style={{ marginBottom: 16, backgroundColor: '#E8F5E9', padding: 8, borderRadius: 8 }}>
+                  <Text style={{ color: '#2E7D32', fontSize: 13, textAlign: 'center' }}>
+                     Saldo Cashback: <Text style={{ fontWeight: 'bold' }}>R$ {Number(selectedCliente.saldoCashback || 0).toFixed(2)}</Text>
+                  </Text>
+               </View>
+            )}
             </>
             ) : (
                 // Exibir apenas o nome do responsável se for mesa
@@ -1918,7 +1927,14 @@ export default function SaleScreen() {
                               onPress={() => handleSelectClient(c)}
                           >
                               <Text style={{ fontSize: 16, fontWeight: 'bold' }}>{c.nome}</Text>
-                              {c.endereco && <Text style={{ fontSize: 12, color: '#666' }}>{c.endereco}</Text>}
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                 {c.endereco && <Text style={{ fontSize: 12, color: '#666', flex: 1 }}>{c.endereco}</Text>}
+                                 {(c.saldoCashback || 0) > 0 && (
+                                    <Text style={{ fontSize: 12, color: '#2E7D32', fontWeight: 'bold' }}>
+                                        Saldo: R$ {Number(c.saldoCashback).toFixed(2)}
+                                    </Text>
+                                 )}
+                              </View>
                           </TouchableOpacity>
                       ))}
                   </ScrollView>

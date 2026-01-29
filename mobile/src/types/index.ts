@@ -45,6 +45,8 @@ export interface Sale {
     id?: number;
     nome: string;
     endereco?: string;
+    saldoCashback?: number;
+    pontos?: number;
   };
 }
 

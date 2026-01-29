@@ -769,15 +769,22 @@ export default function AdminConfiguracoesScreen() {
             <View style={{flexDirection: 'row', gap: 10}}>
                 <View style={{flex: 1}}><SimpleInput label="Série NFC-e" value={String(companyData.serieNfce || '1')} onChangeText={(t: string) => setCompanyData({...companyData, serieNfce: t})} keyboardType="numeric" /></View>
                 <View style={{flex: 1}}><SimpleInput label="Nº Inicial" value={String(companyData.numeroInicialNfce || '1')} onChangeText={(t: string) => setCompanyData({...companyData, numeroInicialNfce: t})} keyboardType="numeric" /></View>
+                <View style={{flex: 1}}><SimpleInput label="Nº Inicial" value={String(companyData.numeroInicialNfce || '1')} onChangeText={(t: string) => setCompanyData({...companyData, numeroInicialNfce: t})} keyboardType="numeric" /></View>
             </View>
 
-            <Text style={styles.sectionHeader}>6. Responsável Legal</Text>
+            <Text style={styles.sectionHeader}>6. Configuração Fidelidade</Text>
+            <View style={{flexDirection: 'row', gap: 10}}>
+                <View style={{flex: 1}}><SimpleInput label="Cashback (%)" value={String(companyData.cashbackPercent || '5.00')} onChangeText={(t: string) => setCompanyData({...companyData, cashbackPercent: t})} keyboardType="numeric" placeholder="5.00" /></View>
+                <View style={{flex: 1}}><SimpleInput label="Pontos por R$" value={String(companyData.pointsPerCurrency || '1.00')} onChangeText={(t: string) => setCompanyData({...companyData, pointsPerCurrency: t})} keyboardType="numeric" placeholder="1.00" /></View>
+            </View>
+
+            <Text style={styles.sectionHeader}>7. Responsável Legal</Text>
             <SimpleInput label="Nome Completo" value={companyData.respNome} onChangeText={(t: string) => setCompanyData({...companyData, respNome: t})} />
             <SimpleInput label="CPF" value={companyData.respCpf} onChangeText={(t: string) => setCompanyData({...companyData, respCpf: t})} />
             <SimpleInput label="Cargo" value={companyData.respCargo} onChangeText={(t: string) => setCompanyData({...companyData, respCargo: t})} />
             <SimpleInput label="Email Pessoal" value={companyData.respEmail} onChangeText={(t: string) => setCompanyData({...companyData, respEmail: t})} />
 
-            <Text style={styles.sectionHeader}>7. Cobrança e Manutenção</Text>
+            <Text style={styles.sectionHeader}>8. Cobrança e Manutenção</Text>
             <SimpleInput label="Plano Contratado" value={companyData.plano} onChangeText={(t: string) => setCompanyData({...companyData, plano: t})} />
             <View style={{flexDirection: 'row', gap: 10}}>
                 <View style={{flex: 1}}><SimpleInput label="Valor Mensal" value={String(companyData.valorMensalidade || '')} onChangeText={(t: string) => setCompanyData({...companyData, valorMensalidade: t})} keyboardType="numeric" /></View>
@@ -794,7 +801,7 @@ export default function AdminConfiguracoesScreen() {
             </View>
             <SimpleInput label="Email para Cobrança" value={companyData.emailCobranca} onChangeText={(t: string) => setCompanyData({...companyData, emailCobranca: t})} keyboardType="email-address" />
 
-            <Text style={styles.sectionHeader}>8. Dados Bancários</Text>
+            <Text style={styles.sectionHeader}>9. Dados Bancários</Text>
             <SimpleInput label="Banco" value={companyData.banco} onChangeText={(t: string) => setCompanyData({...companyData, banco: t})} />
             <View style={{flexDirection: 'row', gap: 10}}>
                 <View style={{flex: 1}}><SimpleInput label="Agência" value={companyData.agencia} onChangeText={(t: string) => setCompanyData({...companyData, agencia: t})} /></View>

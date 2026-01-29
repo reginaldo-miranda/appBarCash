@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/create", async (req, res) => {
   try {
     const prisma = getActivePrisma();
-    const { nome, endereco, cidade, estado, fone, cep, cpf, rg, dataNascimento, ativo } = req.body;
+    const { nome, endereco, cidade, estado, fone, cep, cpf, rg, dataNascimento, ativo, participaFidelidade } = req.body;
 
     // Verificar se CPF já existe (se informado)
     if (cpf) {
@@ -28,7 +28,9 @@ router.post("/create", async (req, res) => {
         cpf: cpf || null,
         rg,
         dataNascimento,
+        dataNascimento,
         ativo: ativo !== undefined ? ativo : true,
+        participaFidelidade: participaFidelidade !== undefined ? participaFidelidade : true,
       },
     });
 
@@ -82,7 +84,7 @@ router.put("/update/:id", async (req, res) => {
   try {
     const prisma = getActivePrisma();
     const id = Number(req.params.id);
-    const { nome, endereco, cidade, estado, fone, cep, cpf, rg, dataNascimento, ativo } = req.body;
+    const { nome, endereco, cidade, estado, fone, cep, cpf, rg, dataNascimento, ativo, participaFidelidade } = req.body;
 
     // Verificar se CPF já existe em outro cliente
     if (cpf) {
@@ -94,7 +96,7 @@ router.put("/update/:id", async (req, res) => {
 
     const customerAtualizado = await prisma.customer.update({
       where: { id },
-      data: { nome, endereco, cidade, estado, fone, cep, cpf: cpf || null, rg, dataNascimento, ativo },
+      data: { nome, endereco, cidade, estado, fone, cep, cpf: cpf || null, rg, dataNascimento, ativo, participaFidelidade },
     });
 
     res.json({ message: "Cliente atualizado com sucesso", customer: customerAtualizado });

@@ -1011,7 +1011,7 @@ router.put('/:id/finalize', async (req, res) => {
       return res.status(400).json({ error: 'ID inválido' });
     }
 
-    const { formaPagamento } = req.body;
+    const { formaPagamento, cashbackUsado } = req.body;
 
     const venda = await prisma.sale.findUnique({
       where: { id },
@@ -1019,7 +1019,7 @@ router.put('/:id/finalize', async (req, res) => {
         itens: true,
         caixaVendas: true,
         funcionario: { select: { nome: true } },
-        cliente: { select: { nome: true } },
+        cliente: { select: { id: true, nome: true, saldoCashback: true, pontos: true } },
         mesa: { include: { funcionarioResponsavel: { select: { id: true, nome: true } } } },
       },
     });
@@ -1033,6 +1033,9 @@ router.put('/:id/finalize', async (req, res) => {
     if (!venda.itens || venda.itens.length === 0) {
       return res.status(400).json({ error: 'Não é possível finalizar uma venda sem itens' });
     }
+
+    // Lógica de Cashback (USO) - Removido daqui pois é tratado no pay-items
+    // Apenas calculamos o total usado para registro
 
     const formaPagamentoNormalizada = String(formaPagamento || venda.formaPagamento || 'dinheiro')
       .toLowerCase()
@@ -1095,10 +1098,11 @@ router.put('/:id/finalize', async (req, res) => {
         funcionarioAberturaNome,
         funcionarioAberturaId,
         funcionarioId,
+        // cashbackUsado: Será calculado abaixo
       },
       include: {
         funcionario: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, participaFidelidade: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
       },
@@ -1134,12 +1138,38 @@ router.put('/:id/finalize', async (req, res) => {
       });
     }
 
+    // Carregar configurações da empresa para cashback
+    const empresaConfig = await prisma.company.findFirst();
+    const pctCashback = empresaConfig?.cashbackPercent ? Number(empresaConfig.cashbackPercent) : 5.0; // Default 5%
+    const ptsPorMoeda = empresaConfig?.pointsPerCurrency ? Number(empresaConfig.pointsPerCurrency) : 1.0; // Default 1.0
+    
+    // Debug
+    // console.log(`Config Cashback: ${pctCashback}%, Points: ${ptsPorMoeda}`);
+
     const totalVenda = Number(vendaFinalizada.total);
     const totalPago = Array.isArray(venda.caixaVendas)
       ? venda.caixaVendas.reduce((acc, cv) => acc + Number(cv.valor), 0)
       : 0;
     
     // Valor restante a ser registrado no caixa agora
+    const totalCashbackUsado = Array.isArray(venda.caixaVendas)
+      ? venda.caixaVendas
+          .filter(cv => cv.formaPagamento === 'cashback')
+          .reduce((acc, cv) => acc + Number(cv.valor), 0)
+      : 0;
+
+    // Atualiza o campo cashbackUsado na venda se houver
+    if (totalCashbackUsado > 0) {
+       await prisma.sale.update({
+         where: { id: vendaFinalizada.id },
+         data: { cashbackUsado: totalCashbackUsado }
+       });
+       vendaFinalizada.cashbackUsado = totalCashbackUsado;
+    }
+
+    // Valor pendente (já descontado o que foi pago com cashback que entrou no totalPago via caixaVendas)
+    // Nota: Como 'cashback' entra em caixaVendas, ele já está somado em 'totalPago'.
+    // Logo, total - totalPago deve ser o correto.
     const valorPendente = Math.max(0, totalVenda - totalPago);
     const forma = formaFinal;
 
@@ -1186,6 +1216,38 @@ router.put('/:id/finalize', async (req, res) => {
           },
         });
       }
+    }
+
+    // Gerar Cashback e Pontos (Ganhar)
+    try {
+        if (vendaFinalizada.clienteId && vendaFinalizada.cliente?.participaFidelidade !== false) {
+            // Regra Configurável: X% do valor total da venda
+            // pctCashback vem da config (ex: 5.0) -> divide por 100
+            const cashbackGerado = Number((total * (pctCashback / 100)).toFixed(2));
+            
+            // Regra Configurável: Y pontos por unidade de moeda
+            const pontosGerados = Math.floor(Number(total) * ptsPorMoeda);
+
+            if (cashbackGerado > 0 || pontosGerados > 0) {
+                await prisma.customer.update({
+                    where: { id: vendaFinalizada.clienteId },
+                    data: {
+                        saldoCashback: { increment: cashbackGerado },
+                        pontos: { increment: pontosGerados }
+                    }
+                });
+                
+                await prisma.sale.update({
+                    where: { id: vendaFinalizada.id },
+                    data: { cashbackGerado }
+                });
+                
+                vendaFinalizada.cashbackGerado = cashbackGerado;
+            }
+        }
+    } catch (errCb) {
+        console.error('Erro ao gerar cashback:', errCb);
+        // Não falha a venda se der erro aqui
     }
 
     res.json(mapSaleResponse(vendaFinalizada));
@@ -1328,13 +1390,33 @@ router.put('/:id/pay-items', async (req, res) => {
     const formaPagamento = String(method || 'dinheiro').toLowerCase();
     const valorPagamento = Number(totalAmount || 0);
 
+    // Lógica de Pagamento com Cashback
+    if (formaPagamento === 'cashback') {
+        if (!venda.clienteId) {
+             return res.status(400).json({ error: 'Venda sem cliente não pode usar cashback' });
+        }
+        // Buscar cliente atualizado
+        const cliente = await prisma.customer.findUnique({ where: { id: venda.clienteId } });
+        if (!cliente) return res.status(400).json({ error: 'Cliente não encontrado' });
+        
+        if (Number(cliente.saldoCashback || 0) < valorPagamento) {
+            return res.status(400).json({ error: 'Saldo de cashback insuficiente' });
+        }
+        
+        // Debitar do cliente
+        await prisma.customer.update({
+            where: { id: cliente.id },
+            data: { saldoCashback: { decrement: valorPagamento } }
+        });
+    }
+
     // Salvar metadados dos itens pagos na tabela CaixaVenda
     await prisma.caixaVenda.create({
       data: {
         caixaId: caixaAberto.id,
         vendaId: venda.id,
         valor: valorPagamento,
-        formaPagamento: ['dinheiro', 'cartao', 'pix'].includes(formaPagamento) ? formaPagamento : 'dinheiro',
+        formaPagamento: ['dinheiro', 'cartao', 'pix', 'cashback'].includes(formaPagamento) ? formaPagamento : 'dinheiro',
         dataVenda: new Date(),
         itensPagos: items || [], // Grava o JSON na tabela
         observacoes: 'Pagamento Parcial / Dividido'

@@ -31,6 +31,7 @@ interface Customer {
   rg: string;
   dataNascimento: Date;
   ativo: boolean;
+  participaFidelidade?: boolean;
   dataInclusao: Date;
 }
 
@@ -61,6 +62,7 @@ export default function AdminClientesScreen() {
     rg: '',
     dataNascimento: '',
     ativo: true,
+    participaFidelidade: true,
   });
 
   useEffect(() => {
@@ -169,6 +171,7 @@ export default function AdminClientesScreen() {
       dataNascimento: customer.dataNascimento ? 
         new Date(customer.dataNascimento).toISOString().split('T')[0] : '',
       ativo: customer.ativo,
+      participaFidelidade: customer.participaFidelidade !== undefined ? customer.participaFidelidade : true,
     });
     setModalVisible(true);
   };
@@ -212,6 +215,7 @@ export default function AdminClientesScreen() {
       rg: '',
       dataNascimento: '',
       ativo: true,
+      participaFidelidade: true,
     });
     setEditingCustomer(null);
   };
@@ -256,11 +260,16 @@ export default function AdminClientesScreen() {
       }
   };
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.nome?.toLowerCase().includes(searchText.toLowerCase()) ||
-    customer.cpf?.includes(searchText.replace(/\D/g, '')) ||
-    customer.fone?.includes(searchText.replace(/\D/g, ''))
-  );
+  const filteredCustomers = customers.filter(customer => {
+    const searchLower = searchText.toLowerCase();
+    const cleanSearchNum = searchText.replace(/\D/g, '');
+    
+    return (
+        (customer.nome && customer.nome.toLowerCase().includes(searchLower)) ||
+        (cleanSearchNum.length > 0 && customer.cpf && customer.cpf.includes(cleanSearchNum)) ||
+        (cleanSearchNum.length > 0 && customer.fone && customer.fone.includes(cleanSearchNum))
+    );
+  });
 
   const renderCustomer = ({ item }: { item: Customer }) => (
     <View style={styles.customerCard}>
@@ -525,6 +534,16 @@ export default function AdminClientesScreen() {
                   value={formData.ativo}
                   onValueChange={(value) => setFormData({ ...formData, ativo: value })}
                   trackColor={{ false: '#ccc', true: '#2196F3' }}
+                />
+              </View>
+
+
+              <View style={styles.switchRow}>
+                <Text style={styles.label}>Participa Fidelidade</Text>
+                <Switch
+                  value={formData.participaFidelidade}
+                  onValueChange={(value) => setFormData({ ...formData, participaFidelidade: value })}
+                  trackColor={{ false: '#ccc', true: '#FF9800' }}
                 />
               </View>
             </View>

@@ -110,6 +110,7 @@ export default function PaymentSplitModal({
     { key: 'dinheiro', label: 'Dinheiro', icon: 'cash' },
     { key: 'cartao', label: 'Cartão', icon: 'card' },
     { key: 'pix', label: 'PIX', icon: 'phone-portrait' },
+    { key: 'cashback', label: 'Cashback', icon: 'gift' },
   ];
 
   // Total da venda
@@ -708,6 +709,21 @@ export default function PaymentSplitModal({
                 </TouchableOpacity>
               ))}
             </View>
+
+            {paymentMethod === 'cashback' && sale?.cliente && (
+               <View style={{ backgroundColor: '#E8F5E9', padding: 10, borderRadius: 8, marginBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text style={{ color: '#2E7D32', fontWeight: 'bold' }}>Saldo Cashback Disponível:</Text>
+                  <Text style={{ color: '#2E7D32', fontWeight: 'bold', fontSize: 16 }}>
+                      R$ {Number(sale.cliente.saldoCashback || 0).toFixed(2)}
+                  </Text>
+               </View>
+            )}
+            
+            {paymentMethod === 'cashback' && !sale?.cliente && (
+               <View style={{ backgroundColor: '#FFEBEE', padding: 10, borderRadius: 8, marginBottom: 16 }}>
+                  <Text style={{ color: '#D32F2F', textAlign: 'center' }}>Venda sem cliente identificado.</Text>
+               </View>
+            )}
 
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, backgroundColor: '#f0f8ff', padding: 10, borderRadius: 8 }}>
                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>

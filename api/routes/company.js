@@ -59,6 +59,8 @@ router.post("/", async (req, res) => {
   if (data.serieNfce) data.serieNfce = Number(data.serieNfce);
   if (data.numeroInicialNfce) data.numeroInicialNfce = Number(data.numeroInicialNfce);
   if (data.diaVencimento) data.diaVencimento = Number(data.diaVencimento);
+  if (data.cashbackPercent) data.cashbackPercent = Number(data.cashbackPercent);
+  if (data.pointsPerCurrency) data.pointsPerCurrency = Number(data.pointsPerCurrency);
   // Helper para conversão segura
   const toDec = (val) => {
       if (val === null || val === undefined || val === '') return null;
@@ -76,6 +78,8 @@ router.post("/", async (req, res) => {
   data.numeroInicialNfce = toInt(data.numeroInicialNfce, 1);
   data.diaVencimento = toInt(data.diaVencimento, null);
   data.diasAtraso = toInt(data.diasAtraso, 0);
+  data.cashbackPercent = toDec(data.cashbackPercent);
+  data.pointsPerCurrency = toDec(data.pointsPerCurrency);
 
   // Garantir que campos de texto sejam strings
 
