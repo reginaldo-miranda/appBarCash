@@ -266,6 +266,7 @@ model Sale {
   total                    Decimal        @db.Decimal(10, 2)
   cashbackGerado           Decimal        @default(0.00) @db.Decimal(10, 2)
   cashbackUsado            Decimal        @default(0.00) @db.Decimal(10, 2)
+  pontosUsados             Int            @default(0)
   formaPagamento           FormaPagamento @default(dinheiro)
   status                   SaleStatus     @default(aberta)
   dataVenda                DateTime       @default(now())
@@ -583,6 +584,10 @@ model Company {
   // Configuração Fidelidade
   cashbackPercent   Decimal  @default(5.00) @db.Decimal(5, 2)
   pointsPerCurrency Decimal  @default(1.00) @db.Decimal(5, 2)
+  
+  // Configuração Resgate
+  pontosParaResgate Int      @default(0)
+  valorResgate      Decimal  @default(0.00) @db.Decimal(10, 2)
 
   // Configuração NFC-e
   csc               String?   // Código de Segurança do Contribuinte

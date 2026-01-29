@@ -777,6 +777,10 @@ export default function AdminConfiguracoesScreen() {
                 <View style={{flex: 1}}><SimpleInput label="Cashback (%)" value={String(companyData.cashbackPercent || '5.00')} onChangeText={(t: string) => setCompanyData({...companyData, cashbackPercent: t})} keyboardType="numeric" placeholder="5.00" /></View>
                 <View style={{flex: 1}}><SimpleInput label="Pontos por R$" value={String(companyData.pointsPerCurrency || '1.00')} onChangeText={(t: string) => setCompanyData({...companyData, pointsPerCurrency: t})} keyboardType="numeric" placeholder="1.00" /></View>
             </View>
+            <View style={{flexDirection: 'row', gap: 10, marginTop: 10}}>
+                <View style={{flex: 1}}><SimpleInput label="Pontos Para Resgate" value={String(companyData.pontosParaResgate || '0')} onChangeText={(t: string) => setCompanyData({...companyData, pontosParaResgate: t})} keyboardType="numeric" placeholder="100" /></View>
+                <View style={{flex: 1}}><SimpleInput label="Valor Resgate (R$)" value={String(companyData.valorResgate || '0.00')} onChangeText={(t: string) => setCompanyData({...companyData, valorResgate: t})} keyboardType="numeric" placeholder="5.00" /></View>
+            </View>
 
             <Text style={styles.sectionHeader}>7. Responsável Legal</Text>
             <SimpleInput label="Nome Completo" value={companyData.respNome} onChangeText={(t: string) => setCompanyData({...companyData, respNome: t})} />

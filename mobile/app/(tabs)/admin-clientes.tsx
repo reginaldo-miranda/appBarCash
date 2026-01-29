@@ -32,6 +32,8 @@ interface Customer {
   dataNascimento: Date;
   ativo: boolean;
   participaFidelidade?: boolean;
+  saldoCashback?: number;
+  pontos?: number;
   dataInclusao: Date;
 }
 
@@ -331,6 +333,21 @@ export default function AdminClientesScreen() {
           <Text style={styles.infoText}>
             Cliente desde: {formatDate(item.dataInclusao)}
           </Text>
+        </View>
+
+        <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+            <View style={[styles.infoRow, { backgroundColor: '#E8F5E9', padding: 4, borderRadius: 4, flex: 1 }]}>
+               <SafeIcon name="gift" size={16} color="#2E7D32" fallbackText="🎁" />
+               <Text style={[styles.infoText, { color: '#2E7D32', fontWeight: 'bold' }]}>
+                 R$ {item.saldoCashback ? Number(item.saldoCashback).toFixed(2) : '0.00'}
+               </Text>
+            </View>
+            <View style={[styles.infoRow, { backgroundColor: '#FFF3E0', padding: 4, borderRadius: 4, flex: 1 }]}>
+               <SafeIcon name="star" size={16} color="#EF6C00" fallbackText="⭐" />
+               <Text style={[styles.infoText, { color: '#EF6C00', fontWeight: 'bold' }]}>
+                 Pts: {item.pontos || 0}
+               </Text>
+            </View>
         </View>
       </View>
       

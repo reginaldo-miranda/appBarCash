@@ -1177,7 +1177,7 @@ export default function SaleScreen() {
       return payload;
   };
 
-  const finalizeSale = async (options?: { silent?: boolean; skipNavigation?: boolean }) => {
+  const finalizeSale = async (options?: { silent?: boolean; skipNavigation?: boolean; pontosUsados?: number }) => {
     console.log('🔄 FINALIZAR VENDA - Iniciando processo');
     
     if (!sale || cart.length === 0) {
@@ -1263,7 +1263,8 @@ export default function SaleScreen() {
       const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
       const finalizeData = {
         formaPagamento: paymentMethod,
-        total: total
+        total: total,
+        ...(options?.pontosUsados ? { pontosUsados: options.pontosUsados } : {})
       };
       
       let response;
@@ -1822,7 +1823,7 @@ export default function SaleScreen() {
         visible={splitModalVisible}
         sale={sale}
         onClose={() => setSplitModalVisible(false)}
-        onPaymentSuccess={(isFullPayment, wantNfce) => {
+        onPaymentSuccess={(isFullPayment, wantNfce, pontosUsados) => {
            // Recarregar venda sempre para garantir consistência visual imediata
            if (vendaId) {
              if (tipo === 'comanda') loadComandaSale(); else loadSale();
@@ -1837,7 +1838,7 @@ export default function SaleScreen() {
              
              if (wantNfce && sale) {
                  // Se vai emitir NFC-e, NÃO navega de volta ainda. O modal de NFC-e fará isso ao fechar.
-                 finalizeSale({ silent: true, skipNavigation: true }).then(() => {
+                 finalizeSale({ silent: true, skipNavigation: true, pontosUsados }).then(() => {
                     const sid = String((sale as any).id || (sale as any)._id);
                     // Pequeno delay para garantir que o modal split fechou e estado limpou
                     setTimeout(() => {
@@ -1859,7 +1860,7 @@ export default function SaleScreen() {
                  });
              } else {
                  // Comportamento padrão: finaliza e volta
-                 finalizeSale({ silent: true });
+                 finalizeSale({ silent: true, pontosUsados });
                  
                  // Se for delivery mas o usuario NÃO quis NFC-e aqui (mas talvez tenha vindo do fluxo SIM -> Pagamento -> mas mudou ideia?)
                  // Não, se ele veio do fluxo SIM, ele marcou wantNfce no split.

@@ -179,6 +179,16 @@ export default function TabLayout() {
           }}
         />
       )}
+
+      {/* Manual de Ajuda */}
+      <Tabs.Screen
+        name="ajuda"
+        options={{
+          title: 'Ajuda',
+          headerTitle: 'Manual do Sistema',
+          tabBarIcon: ({ color }) => <SafeIcon name="help-circle" size={24} color={color} fallbackText="?" />,
+        }}
+      />
     </Tabs>
   );
 }

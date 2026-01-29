@@ -17,7 +17,7 @@ import {
 
 import { Ionicons } from '@expo/vector-icons';
 import { Sale, CartItem, PaymentMethod } from '../types/index';
-import { caixaService, saleService } from '../services/api';
+import { caixaService, saleService, companyService } from '../services/api';
 import { events } from '../utils/eventBus';
 import PixModal from './PixModal';
 import CpfModal from './CpfModal';
@@ -27,7 +27,7 @@ interface PaymentSplitModalProps {
   visible: boolean;
   sale: Sale | null;
   onClose: () => void;
-  onPaymentSuccess: (isFullPayment?: boolean, wantNfce?: boolean) => void;
+  onPaymentSuccess: (isFullPayment?: boolean, wantNfce?: boolean, pontosUsados?: number) => void;
 }
 
 
@@ -57,6 +57,18 @@ export default function PaymentSplitModal({
   const [pixAmount, setPixAmount] = useState(0);
   const [cpfModalVisible, setCpfModalVisible] = useState(false);
   const [pendingConfirmAction, setPendingConfirmAction] = useState<(() => void) | null>(null);
+
+  // Pontos
+  const [pointsToUse, setPointsToUse] = useState(0);
+  const [redemptionRule, setRedemptionRule] = useState<{points: number, value: number} | null>(null);
+
+  useEffect(() => {
+    companyService.get().then(res => {
+      const p = Number(res.data.pontosParaResgate || 0);
+      const v = Number(res.data.valorResgate || 0);
+      if (p > 0 && v > 0) setRedemptionRule({ points: p, value: v });
+    }).catch(() => {});
+  }, []);
 
 
   // Efeito para fechar o modal se a venda for finalizada remotamente
@@ -353,29 +365,36 @@ export default function PaymentSplitModal({
         const finished = balance ? (Math.abs(balance.remaining - amount) < 0.05) : false;
         return {
           id,
-          paidAmount: amount,
+          paidAmount: amount, // O valor nominal pago (incluindo pontos)
           fullyPaid: finished
         };
       });
 
+      const discountPoints = redemptionRule && pointsToUse > 0 
+           ? (pointsToUse / redemptionRule.points) * redemptionRule.value 
+           : 0;
+
       await saleService.payItems(saleId, {
         paymentInfo: {
           method: paymentMethod,
-          totalAmount: totalSelected
+          totalAmount: Math.max(0, totalSelected - discountPoints) // Cobra apenas o que sobrou
         },
         items: itemsPayload
       });
 
       // Verificar se o pagamento quita a dívida total (com tolerância)
+      // totalRemainingGlobal = O que faltava.
+      // totalSelected = O que estamos abatendo agora (seja com dinheiro ou pontos)
       const isFullPayment = (totalRemainingGlobal - totalSelected) <= 0.05;
 
-      console.log('✅ Pagamento Confirmado. Full?', isFullPayment);
+      console.log('✅ Pagamento Confirmado. Full?', isFullPayment, 'Pontos:', pointsToUse);
 
       // Limpar seleção
       setSelectedItems(new Map());
+      setPointsToUse(0); // Resetar pontos após uso
 
       // Notificar sucesso (callback crítico para fechar modais)
-      onPaymentSuccess(isFullPayment, emitirNfce);
+      onPaymentSuccess(isFullPayment, emitirNfce, pointsToUse);
 
       // Feedback visual
       if (!isFullPayment) {
@@ -685,6 +704,56 @@ export default function PaymentSplitModal({
           </View>
 
           <View style={styles.footer}>
+            {/* Seção de Resgate de Pontos */}
+            {redemptionRule && sale?.cliente && (sale.cliente.pontos || 0) >= redemptionRule.points && (
+               <View style={{ marginBottom: 16, padding: 12, backgroundColor: '#FFF3E0', borderRadius: 8, borderWidth: 1, borderColor: '#FFB74D' }}>
+                  <Text style={{ fontWeight: 'bold', color: '#E65100', marginBottom: 8 }}>
+                      Resgate de Pontos 🎁
+                  </Text>
+                  
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <Text style={{ color: '#555' }}>Disponível: {sale.cliente.pontos} pts</Text>
+                      <Text style={{ color: '#555' }}>
+                          Regra: {redemptionRule.points} pts = R$ {redemptionRule.value.toFixed(2)}
+                      </Text>
+                  </View>
+                  
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <TouchableOpacity 
+                         style={{ padding: 8, backgroundColor: '#FFE0B2', borderRadius: 4 }}
+                         onPress={() => setPointsToUse(Math.max(0, pointsToUse - redemptionRule.points))}
+                      >
+                          <Ionicons name="remove" size={24} color="#E65100" />
+                      </TouchableOpacity>
+                      
+                      <View style={{ alignItems: 'center' }}>
+                          <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#E65100' }}>{pointsToUse} pts</Text>
+                          <Text style={{ fontSize: 12, color: '#E65100' }}>
+                            - R$ {((pointsToUse / redemptionRule.points) * redemptionRule.value).toFixed(2)}
+                          </Text>
+                      </View>
+
+                      <TouchableOpacity 
+                         style={{ padding: 8, backgroundColor: '#FFE0B2', borderRadius: 4 }}
+                         onPress={() => {
+                             const nextVal = pointsToUse + redemptionRule.points;
+                             const potentialDiscount = (nextVal / redemptionRule.points) * redemptionRule.value;
+                             
+                             // Não permitir usar mais pontos que o saldo
+                             if (nextVal > (sale.cliente?.pontos || 0)) return;
+                             
+                             // Não permitir desconto maior que o restante
+                             if (potentialDiscount > totalRemainingGlobal + 0.05) return;
+                             
+                             setPointsToUse(nextVal);
+                         }}
+                      >
+                          <Ionicons name="add" size={24} color="#E65100" />
+                      </TouchableOpacity>
+                  </View>
+               </View>
+            )}
+
             <View style={styles.paymentMethods}>
               {paymentMethods.map(method => (
                 <TouchableOpacity

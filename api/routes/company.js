@@ -61,6 +61,8 @@ router.post("/", async (req, res) => {
   if (data.diaVencimento) data.diaVencimento = Number(data.diaVencimento);
   if (data.cashbackPercent) data.cashbackPercent = Number(data.cashbackPercent);
   if (data.pointsPerCurrency) data.pointsPerCurrency = Number(data.pointsPerCurrency);
+  if (data.valorResgate) data.valorResgate = Number(data.valorResgate);
+  if (data.pontosParaResgate) data.pontosParaResgate = Number(data.pontosParaResgate);
   // Helper para conversão segura
   const toDec = (val) => {
       if (val === null || val === undefined || val === '') return null;
@@ -80,6 +82,8 @@ router.post("/", async (req, res) => {
   data.diasAtraso = toInt(data.diasAtraso, 0);
   data.cashbackPercent = toDec(data.cashbackPercent);
   data.pointsPerCurrency = toDec(data.pointsPerCurrency);
+  data.valorResgate = toDec(data.valorResgate);
+  data.pontosParaResgate = toInt(data.pontosParaResgate, 0);
 
   // Garantir que campos de texto sejam strings
 

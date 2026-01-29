@@ -1044,6 +1044,39 @@ router.put('/:id/finalize', async (req, res) => {
     const formaFinal = ['dinheiro', 'cartao', 'pix'].includes(formaPagamentoNormalizada)
       ? formaPagamentoNormalizada
       : 'dinheiro';
+    
+    // Lógica de Resgate de Pontos (Novo)
+    let descontoPontos = 0;
+    let pontosUtilizados = 0;
+
+    if (req.body.pontosUsados > 0 && venda.clienteId) {
+        const config = await prisma.company.findFirst();
+        const ptResgate = config?.pontosParaResgate || 0;
+        const valResgate = Number(config?.valorResgate || 0);
+
+        if (ptResgate > 0 && valResgate > 0) {
+            pontosUtilizados = Number(req.body.pontosUsados);
+            
+            // Verificar saldo do cliente
+            const saldoPontos = venda.cliente?.pontos || 0;
+            if (saldoPontos < pontosUtilizados) {
+                 return res.status(400).json({ error: `Saldo de pontos insuficiente (${saldoPontos})` });
+            }
+
+            // Calcular desconto: (Usados / Bloco) * Valor
+            // Ex: 200 pts / 100 * 5.00 = 10.00
+            // Permitir parcial? O calculo simples abaixo permite proporcional se a frontend mandar quebrado
+            // Mas geralmente é em blocos. Vamos assumir que o frontend valida os blocos ou enviamos o calculo exato.
+            // Aqui faremos regra de 3 simples.
+            descontoPontos = (pontosUtilizados / ptResgate) * valResgate;
+            
+            // Debitar do cliente
+             await prisma.customer.update({
+                where: { id: venda.clienteId },
+                data: { pontos: { decrement: pontosUtilizados } }
+            });
+        }
+    }
 
     const subtotal = Number(
       venda.itens.reduce(
@@ -1051,7 +1084,7 @@ router.put('/:id/finalize', async (req, res) => {
         0
       )
     );
-    const descontoNum = Number(venda.desconto || 0);
+    const descontoNum = Number(venda.desconto || 0) + descontoPontos;
     const total = Math.max(0, subtotal - descontoNum);
 
     let responsavelNome = venda.responsavelNome || null;
@@ -1091,6 +1124,8 @@ router.put('/:id/finalize', async (req, res) => {
         formaPagamento: formaFinal,
         subtotal,
         total,
+        desconto: descontoNum,
+        pontosUsados: pontosUtilizados,
         status: 'finalizada',
         dataFinalizacao: new Date(),
         responsavelNome,

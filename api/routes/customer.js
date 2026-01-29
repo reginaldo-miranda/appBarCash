@@ -56,6 +56,7 @@ router.get("/list", async (req, res) => {
       orderBy: { dataInclusao: "desc" },
       take: 20
     });
+    console.log('API /list customers[0]:', customers.length > 0 ? customers[0] : 'empty');
     res.json(customers);
   } catch (error) {
     console.error(error);
