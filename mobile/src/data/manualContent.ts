@@ -102,6 +102,15 @@ export const MANUAL_DATA: ManualCategory[] = [
 1. Em **Configurações > Emissão e Impressão**.
 2. Altere o "Nome Fantasia na Impressão".
 3. Altere a "Mensagem de Rodapé" (ex: "Obrigado pela preferência!").`
+      },
+      {
+        id: 'cfg-perfis',
+        title: 'Perfis de Acesso (Cargos)',
+        content: `Gerencie o que cada funcionário pode fazer:
+1. Vá em **Configurações > Configurações Gerais**.
+2. Clique em **Perfis de Acesso (Cargos)**.
+3. Crie cargos como "Gerente" ou "Vendedor" e marque as permissões desejadas.
+4. Para vincular: Vá em **Gerenciamento de Usuários** (na tela de Configurações), edite um funcionário e selecione o **Perfil** criado. O sistema aplicará as regras automaticamente.`
       }
     ]
   },

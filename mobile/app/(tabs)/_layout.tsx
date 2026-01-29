@@ -168,6 +168,18 @@ export default function TabLayout() {
         />
       )}
 
+      {(isAdmin() || Platform.OS === 'web') && (
+        <Tabs.Screen
+          name="admin-perfis"
+          options={{
+            href: null,
+            title: 'Perfis de Acesso',
+            headerTitle: 'Gerenciar Perfis de Acesso',
+            tabBarIcon: ({ color }) => <SafeIcon name="shield-checkmark" size={24} color={color} fallbackText="Perfis" />,
+          }}
+        />
+      )}
+
       {(hasPermission('relatorios') || Platform.OS === 'web') && (
         <Tabs.Screen
           name="admin-relatorios"

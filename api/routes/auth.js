@@ -87,7 +87,15 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({ 
+      where: { email },
+      include: { 
+        role: true,
+        employee: {
+           include: { role: true }
+        }
+      }
+    });
     if (!user) {
       return res.status(400).json({ error: "Usuário não encontrado" });
     }
@@ -113,6 +121,8 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    const effectiveRole = user.role || (user.employee ? user.employee.role : null);
+    
     return res.json({
       message: "Login bem-sucedido",
       token,
@@ -122,7 +132,8 @@ router.post("/login", async (req, res) => {
         email: user.email,
         nome: user.nome,
         tipo: user.tipo,
-        permissoes: user.permissoes || {},
+        permissoes: effectiveRole ? effectiveRole.permissoes : (user.permissoes || {}),
+        role: effectiveRole,
         ativo: user.ativo,
       },
     });

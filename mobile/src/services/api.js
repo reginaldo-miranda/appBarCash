@@ -639,6 +639,14 @@ export const companyService = {
 
 };
 
+// Serviço de Perfis (Roles)
+export const roleService = {
+  getAll: () => api.get('/roles').then(res => res.data),
+  create: (data) => api.post('/roles', data),
+  update: (id, data) => api.put(`/roles/${id}`, data),
+  delete: (id) => api.delete(`/roles/${id}`),
+};
+
 export const userService = {
   list: () => api.get('/user/list'),
   getAll: async () => (await api.get('/user/list')).data,

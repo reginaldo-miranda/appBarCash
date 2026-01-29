@@ -16,10 +16,24 @@ model User {
   nome         String
   tipo         TipoUsuario @default(funcionario)
   employeeId   Int?
+  employee     Employee?   @relation(fields: [employeeId], references: [id])
   permissoes   Json?
+  roleId       Int?        
+  role         Role?       @relation(fields: [roleId], references: [id])
   ativo        Boolean     @default(true)
   dataInclusao DateTime    @default(now())
   ultimoLogin  DateTime?
+}
+
+model Role {
+  id           Int      @id @default(autoincrement())
+  nome         String   @unique
+  descricao    String?
+  permissoes   Json     // { vendas: true, relatorios: false, ... }
+  ativo        Boolean  @default(true)
+  users        User[]
+  employees    Employee[]
+  dataInclusao DateTime @default(now())
 }
 
 model Product {
@@ -104,6 +118,9 @@ model Employee {
   salario           Decimal?   @db.Decimal(10, 2)
   dataAdmissao      DateTime?
   ativo             Boolean    @default(true)
+  roleId            Int?
+  role              Role?      @relation(fields: [roleId], references: [id])
+  users             User[]
   dataInclusao      DateTime   @default(now())
   caixasAbertura    Caixa[]    @relation("CaixaFuncionarioAbertura")
   caixasFechamento  Caixa[]    @relation("CaixaFuncionarioFechamento")

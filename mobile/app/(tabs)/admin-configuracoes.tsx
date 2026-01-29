@@ -16,7 +16,7 @@ import {
 
 
 import { SafeIcon } from '../../components/SafeIcon';
-import { employeeService, userService, companyService, idleTimeConfigService } from '../../src/services/api';
+import { employeeService, userService, companyService, idleTimeConfigService, roleService } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import ScreenIdentifier from '../../src/components/ScreenIdentifier';
 import { useNavigation } from '@react-navigation/native';
@@ -33,6 +33,8 @@ interface UserPermissions {
   nome: string;
   email: string;
   tipo: 'admin' | 'funcionario';
+  roleId?: number;
+  role?: { nome: string };
   funcionario?: Employee;
   permissoes: {
     produtos: boolean;
@@ -48,6 +50,7 @@ interface UserPermissions {
 export default function AdminConfiguracoesScreen() {
   const { isAdmin, user } = useAuth() as any;
   const [users, setUsers] = useState<UserPermissions[]>([]);
+  const [employeesList, setEmployeesList] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserPermissions | null>(null);
@@ -56,6 +59,18 @@ export default function AdminConfiguracoesScreen() {
   const [companyModalVisible, setCompanyModalVisible] = useState(false);
   const [companyData, setCompanyData] = useState<any>({});
   const [loadingCompany, setLoadingCompany] = useState(false);
+  
+  // Roles
+  // Roles & Employees
+  const [rolesList, setRolesList] = useState<any[]>([]); 
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+  
+  // Creation State
+  const [isCreating, setIsCreating] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [formName, setFormName] = useState('');
+  const [formEmail, setFormEmail] = useState('');
 
   // States para Controle de Cores (Tempo sem consumo)
   const [idleTimeModalVisible, setIdleTimeModalVisible] = useState(false);
@@ -85,14 +100,30 @@ export default function AdminConfiguracoesScreen() {
     try {
       setLoading(true);
       const response = await userService.getAll();
-      // Ajuste: getAll agora retorna um array diretamente; manter compatibilidade caso venha com .data
       setUsers(Array.isArray(response) ? response : (response?.data ?? []));
+      
+      // Load Roles
+      loadRoles();
+      
+      // Load Employees
+      const emps = await employeeService.getAll();
+      setEmployeesList(emps.data || []);
+      
     } catch (error: any) {
       console.error('Erro ao carregar usuários:', error);
       Alert.alert('Erro', 'Erro ao carregar usuários');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadRoles = async () => {
+      try {
+          const res = await roleService.getAll();
+          setRolesList(res);
+      } catch (e) {
+          console.error('Erro roles', e);
+      }
   };
 
   const loadCompany = async () => {
@@ -272,27 +303,82 @@ export default function AdminConfiguracoesScreen() {
 
 
   const handleEditPermissions = (userToEdit: UserPermissions) => {
+    setIsCreating(false);
     setSelectedUser({ ...userToEdit });
+    setSelectedRoleId(userToEdit.roleId || null);
+    // Verificar se existe vínculo com funcionário (vem do include: { employee: true })
+    const empLink = (userToEdit as any).employee; 
+    setSelectedEmployeeId(empLink ? empLink.id : null);
+
+    if (rolesList.length === 0) loadRoles(); 
+    if (employeesList.length === 0) {
+        // Load employees just in case they weren't loaded
+        employeeService.getAll().then(res => setEmployeesList(res.data || [])).catch(console.error);
+    }
     setModalVisible(true);
+  };
+
+  const handleAddUser = () => {
+      setIsCreating(true);
+      setSelectedUser({
+          _id: '',
+          nome: '',
+          email: '',
+          tipo: 'funcionario',
+          ativa: true,
+          permissoes: { produtos: false, funcionarios: false, clientes: false, vendas: true, relatorios: false, configuracoes: false },
+          ativo: true
+      } as any);
+      setFormName('');
+      setFormEmail('');
+      setNewPassword('');
+      setSelectedRoleId(null);
+      setSelectedEmployeeId(null);
+      setModalVisible(true);
   };
 
   const handleSavePermissions = async () => {
     if (!selectedUser) return;
 
     try {
-      await userService.updatePermissions(selectedUser._id, selectedUser.permissoes);
+      const payload: any = { 
+          permissoes: selectedUser.permissoes, 
+          roleId: selectedRoleId,
+          funcionario: selectedEmployeeId
+      };
+      
+      if (isCreating) {
+          if (!formName || !formEmail || !newPassword) {
+              Alert.alert('Erro', 'Preencha nome, email e senha.');
+              return;
+          }
+          // Create
+          await userService.create({
+              nome: formName,
+              email: formEmail,
+              senha: newPassword,
+              tipo: selectedUser.tipo, // Default funcionario
+              ...payload
+          });
+          Alert.alert('Sucesso', 'Usuário criado com sucesso');
+      } else {
+        // Update
+        await userService.update(selectedUser._id, payload);
+        Alert.alert('Sucesso', 'Usuário atualizado com sucesso');
+      }
       
       // Atualizar lista local
-      setUsers(users.map(u => u._id === selectedUser._id ? selectedUser : u));
+      loadUsers(); 
       
-      Alert.alert('Sucesso', 'Permissões atualizadas com sucesso');
       setModalVisible(false);
       setSelectedUser(null);
+      setSelectedEmployeeId(null);
     } catch (error: any) {
       console.error('Erro ao salvar permissões:', error);
       Alert.alert('Erro', 'Erro ao salvar permissões');
     }
   };
+
 
   const toggleUserStatus = async (userId: string, currentStatus: boolean) => {
     try {
@@ -447,7 +533,15 @@ export default function AdminConfiguracoesScreen() {
 
         {/* Seção de Gerenciamento de Usuários */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Gerenciamento de Usuários</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: 16, marginBottom: 16 }}>
+            <Text style={{ ...styles.sectionTitle, marginBottom: 0 }}>Gerenciamento de Usuários</Text>
+            <TouchableOpacity 
+              onPress={() => handleAddUser()}
+              style={{ backgroundColor: '#2196F3', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 }}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>+ Novo Usuário</Text>
+            </TouchableOpacity>
+          </View>
           
           {loading ? (
             <View style={styles.loadingContainer}>
@@ -516,6 +610,22 @@ export default function AdminConfiguracoesScreen() {
               </View>
               <SafeIcon name="chevron-forward" size={20} color="#ccc" fallbackText="›" />
             </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.settingItem, { borderLeftWidth: 4, borderLeftColor: '#9C27B0' }]}
+              onPress={() => navigation.navigate('admin-perfis' as never)}
+            >
+              <View style={styles.settingContent}>
+                <SafeIcon name="shield-checkmark" size={24} color="#9C27B0" fallbackText="🛡" />
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingTitle}>Perfis de Acesso (Cargos)</Text>
+                  <Text style={styles.settingDescription}>
+                    Criar cargos e definir permissões
+                  </Text>
+                </View>
+              </View>
+              <SafeIcon name="chevron-forward" size={20} color="#ccc" fallbackText="›" />
+            </TouchableOpacity>
             
 
 
@@ -579,8 +689,121 @@ export default function AdminConfiguracoesScreen() {
           {selectedUser && (
             <ScrollView style={styles.modalContent}>
               <View style={styles.userInfoModal}>
-                <Text style={styles.modalUserName}>{selectedUser.nome}</Text>
-                <Text style={styles.modalUserEmail}>{selectedUser.email}</Text>
+                {isCreating ? (
+                    <View style={{ width: '100%', marginBottom: 10 }}>
+                       <Text style={styles.label}>Nome</Text>
+                       <TextInput style={styles.inputField} value={formName} onChangeText={setFormName} placeholder="Nome do Usuário" />
+                       
+                       <Text style={[styles.label, {marginTop: 10}]}>Email (Login)</Text>
+                       <TextInput style={styles.inputField} value={formEmail} onChangeText={setFormEmail} autoCapitalize="none" keyboardType="email-address" placeholder="email@exemplo.com" />
+                       
+                       <Text style={[styles.label, {marginTop: 10}]}>Senha</Text>
+                       <TextInput style={styles.inputField} value={newPassword} onChangeText={setNewPassword} secureTextEntry placeholder="******" />
+                       
+                       <Text style={[styles.label, {marginTop: 10}]}>Tipo de Conta</Text>
+                        <View style={{flexDirection: 'row', gap: 20, marginTop: 5}}>
+                           <TouchableOpacity onPress={() => setSelectedUser({...selectedUser, tipo: 'funcionario'})} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                               <SafeIcon name={selectedUser.tipo === 'funcionario' ? 'radio-button-on' : 'radio-button-off'} size={20} color="#2196F3" fallbackText="O" />
+                               <Text style={{marginLeft: 5, color: '#333'}}>Funcionário</Text>
+                           </TouchableOpacity>
+                           {isAdmin() && (
+                            <TouchableOpacity onPress={() => setSelectedUser({...selectedUser, tipo: 'admin'})} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                               <SafeIcon name={selectedUser.tipo === 'admin' ? 'radio-button-on' : 'radio-button-off'} size={20} color="#2196F3" fallbackText="O" />
+                               <Text style={{marginLeft: 5, color: '#333'}}>Administrador</Text>
+                            </TouchableOpacity>
+                           )}
+                        </View>
+                    </View>
+                ) : (
+                    <>
+                        <Text style={styles.modalUserName}>{selectedUser.nome}</Text>
+                        <Text style={styles.modalUserEmail}>{selectedUser.email}</Text>
+                    </>
+                )}
+              </View>
+
+              {/* Seletor de Funcionário Vinculado */}
+              {selectedUser.tipo === 'funcionario' && (
+              <View style={{ marginBottom: 20 }}>
+                  <Text style={styles.label}>Vincular a Funcionário</Text>
+                  <Text style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+                    Vincule este login a um cadastro de funcionário para herdar cargo e dados.
+                  </Text>
+                  
+                  <View style={{ maxHeight: 200, borderWidth: 1, borderColor: '#eee', borderRadius: 8 }}>
+                      <ScrollView nestedScrollEnabled={true}>
+                        <TouchableOpacity 
+                            style={{ padding: 12, borderBottomWidth: 1, borderBottomColor: '#eee' }}
+                            onPress={() => setSelectedEmployeeId(null)}
+                        >
+                            <Text style={{ color: '#666' }}>-- Sem Vínculo --</Text>
+                        </TouchableOpacity>
+                        {employeesList.map(emp => (
+                            <TouchableOpacity 
+                                key={emp._id || (emp as any).id} 
+                                style={{ 
+                                    padding: 12, 
+                                    borderBottomWidth: 1, 
+                                    borderBottomColor: '#eee', 
+                                    backgroundColor: String(selectedEmployeeId) === String(emp._id || (emp as any).id) ? '#E3F2FD' : '#fff' 
+                                }}
+                                onPress={() => setSelectedEmployeeId((emp as any).id || emp._id)}
+                            >
+                                <Text style={{ color: '#333', fontWeight: String(selectedEmployeeId) === String(emp._id || (emp as any).id) ? 'bold' : 'normal' }}>
+                                    {emp.nome}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                      </ScrollView>
+                  </View>
+              </View>
+              )}
+
+              {/* Seletor de Perfil */}
+              <View style={{ marginBottom: 20 }}>
+                  <Text style={styles.label}>Perfil (Cargo)</Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+                      <TouchableOpacity 
+                         onPress={() => setSelectedRoleId(null)}
+                         style={{ 
+                             padding: 8, 
+                             borderRadius: 8, 
+                             borderWidth: 1, 
+                             borderColor: selectedRoleId === null ? '#2196F3' : '#ddd',
+                             backgroundColor: selectedRoleId === null ? '#E3F2FD' : '#fff'
+                         }}
+                      >
+                          <Text style={{ color: selectedRoleId === null ? '#2196F3' : '#666' }}>Personalizado</Text>
+                      </TouchableOpacity>
+                      
+                      {rolesList.map(r => (
+                          <TouchableOpacity 
+                             key={r.id}
+                             onPress={() => {
+                                 setSelectedRoleId(r.id);
+                                 // Opcional: Copiar permissoes do role para o usuario visualmente?
+                                 // Sim, ajuda a visualizar.
+                                 if (r.permissoes) {
+                                     setSelectedUser(prev => prev ? ({ ...prev, permissoes: { ...(prev.permissoes), ...r.permissoes } }) : null);
+                                 }
+                             }}
+                             style={{ 
+                                 padding: 8, 
+                                 borderRadius: 8, 
+                                 borderWidth: 1, 
+                                 borderColor: selectedRoleId === r.id ? '#2196F3' : '#ddd',
+                                 backgroundColor: selectedRoleId === r.id ? '#E3F2FD' : '#fff'
+                             }}
+                          >
+                              <Text style={{ color: selectedRoleId === r.id ? '#2196F3' : '#666' }}>{r.nome}</Text>
+                          </TouchableOpacity>
+                      ))}
+                  </View>
+                  <Text style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                     {selectedRoleId 
+                        ? 'Permissões vinculadas ao perfil selecionado.' 
+                        : 'Permissões definidas manualmente abaixo.'}
+                  </Text>
               </View>
 
               <Text style={styles.permissionsHeader}>Permissões de Acesso</Text>
@@ -1271,6 +1494,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  label: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#555',
+    marginBottom: 4,
+  },
   inputGroup: {
     marginBottom: 12,
   },
@@ -1279,6 +1508,39 @@ const styles = StyleSheet.create({
     color: '#333',
     marginBottom: 4,
     fontWeight: '500',
+  },
+  pickerButton: {
+    backgroundColor: '#f9f9f9',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  pickerButtonText: {
+    fontSize: 16,
+    color: '#333'
+  },
+  pickerDropdown: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#eee',
+    borderRadius: 8,
+    marginTop: -8,
+    marginBottom: 12,
+    maxHeight: 200
+  },
+  pickerItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f9f9f9'
+  },
+  pickerItemText: {
+    fontSize: 16,
+    color: '#666'
   },
   inputField: {
     backgroundColor: '#f9f9f9',

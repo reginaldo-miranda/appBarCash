@@ -61,6 +61,7 @@ import variationTypeRoutes from "./routes/variationType.js";
 import nfceRoutes from "./routes/nfce.js";
 import systemRoutes from "./routes/system.js";
 import idleTimeConfigRoutes from "./routes/idleTimeConfig.js";
+import roleRoutes from "./routes/roles.js";
 
 // dotenv configured at top
 
@@ -270,6 +271,7 @@ app.use("/api/printer", authenticate, printerRoutes);
 app.use("/api/nfce", nfceRoutes);
 app.use("/api/system", systemRoutes); // Public for setup
 app.use("/api/idle-time-config", authenticate, idleTimeConfigRoutes);
+app.use("/api/roles", authenticate, roleRoutes);
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, '0.0.0.0', () => console.log(`✅ API rodando em: http://0.0.0.0:${PORT}`));

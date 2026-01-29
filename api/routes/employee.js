@@ -14,7 +14,7 @@ const mapEmployeeResponse = (e) => {
 // Rota para criar funcionário
 router.post("/create", async (req, res) => {
   try {
-    const { nome, endereco, bairro, telefone, salario, dataAdmissao, ativo } = req.body;
+    const { nome, endereco, bairro, telefone, salario, dataAdmissao, ativo, roleId } = req.body;
 
     const novoEmployee = await prisma.employee.create({
       data: {
@@ -25,6 +25,7 @@ router.post("/create", async (req, res) => {
         salario,
         dataAdmissao,
         ativo: ativo !== undefined ? ativo : true,
+        roleId: (roleId && Number(roleId) > 0) ? Number(roleId) : null,
       },
     });
 
@@ -40,6 +41,7 @@ router.get("/list", async (req, res) => {
   try {
     const employees = await prisma.employee.findMany({
       orderBy: { dataInclusao: "desc" },
+      include: { role: true },
     });
     res.json(employees.map(mapEmployeeResponse));
   } catch (error) {
@@ -68,11 +70,14 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const id = Number(req.params.id);
-    const { nome, endereco, bairro, telefone, salario, dataAdmissao, ativo } = req.body;
+    const { nome, endereco, bairro, telefone, salario, dataAdmissao, ativo, roleId } = req.body;
 
     const employee = await prisma.employee.update({
       where: { id },
-      data: { nome, endereco, bairro, telefone, salario, dataAdmissao, ativo },
+      data: { 
+        nome, endereco, bairro, telefone, salario, dataAdmissao, ativo,
+        roleId: (roleId && Number(roleId) > 0) ? Number(roleId) : null 
+      },
     });
 
     res.json({ message: "Funcionário atualizado com sucesso", employee: mapEmployeeResponse(employee) });

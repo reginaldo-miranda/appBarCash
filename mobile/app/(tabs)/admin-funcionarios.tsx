@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'react-native';
 // Removido: import { Ionicons } from '@expo/vector-icons';
-import { employeeService } from '../../src/services/api';
+import { employeeService, roleService } from '../../src/services/api';
 import { useAuth } from '../../src/contexts/AuthContext';
 import ScreenIdentifier from '../../src/components/ScreenIdentifier';
 import { SafeIcon } from '../../components/SafeIcon';
@@ -28,6 +28,8 @@ interface Employee {
   salario: number;
   dataAdmissao: Date;
   ativo: boolean;
+  roleId?: number;
+  role?: { nome: string };
   dataInclusao: Date;
 }
 
@@ -38,6 +40,8 @@ export default function AdminFuncionariosScreen() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [searchText, setSearchText] = useState('');
+  const [rolesList, setRolesList] = useState<any[]>([]);
+  const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -56,7 +60,17 @@ export default function AdminFuncionariosScreen() {
       return;
     }
     loadEmployees();
+    loadRoles();
   }, []);
+
+  const loadRoles = async () => {
+      try {
+          const res = await roleService.getAll();
+          setRolesList(res);
+      } catch (e) {
+          console.error('Erro roles', e);
+      }
+  };
 
   const loadEmployees = async () => {
     try {
@@ -73,6 +87,12 @@ export default function AdminFuncionariosScreen() {
   };
 
   const handleSaveEmployee = async () => {
+    // Validar se roleService está ok
+    if (!roleService) {
+        Alert.alert('Erro Interno', 'Serviço de perfis indisponível.');
+        return;
+    }
+
     try {
       if (!formData.nome.trim()) {
         Alert.alert('Erro', 'Nome é obrigatório');
@@ -83,6 +103,7 @@ export default function AdminFuncionariosScreen() {
         ...formData,
         salario: parseFloat(formData.salario) || 0,
         dataAdmissao: new Date(formData.dataAdmissao),
+        roleId: selectedRoleId
       };
 
       if (editingEmployee) {
@@ -113,6 +134,7 @@ export default function AdminFuncionariosScreen() {
       dataAdmissao: new Date(employee.dataAdmissao).toISOString().split('T')[0],
       ativo: employee.ativo,
     });
+    setSelectedRoleId(employee.roleId || null);
     setModalVisible(true);
   };
 
@@ -151,6 +173,7 @@ export default function AdminFuncionariosScreen() {
       ativo: true,
     });
     setEditingEmployee(null);
+    setSelectedRoleId(null);
   };
 
   const formatDate = (date: Date) => {
@@ -215,6 +238,15 @@ export default function AdminFuncionariosScreen() {
             Admissão: {formatDate(item.dataAdmissao)}
           </Text>
         </View>
+
+        {item.role && (
+             <View style={styles.infoRow}>
+                <SafeIcon name="shield-checkmark" size={16} color="#9C27B0" fallbackText="🛡" />
+                <Text style={[styles.infoText, { color: '#9C27B0', fontWeight: 'bold' }]}>
+                    {item.role.nome}
+                </Text>
+             </View>
+        )}
       </View>
       
       <View style={styles.employeeStatus}>
@@ -312,12 +344,15 @@ export default function AdminFuncionariosScreen() {
             <Text style={styles.modalTitle}>
               {editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}
             </Text>
-            <TouchableOpacity onPress={handleSaveEmployee}>
+            <TouchableOpacity 
+              onPress={handleSaveEmployee}
+              style={{ padding: 10, backgroundColor: '#E3F2FD', borderRadius: 8 }}
+            >
               <Text style={styles.saveButton}>Salvar</Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={styles.modalContent}>
+          <ScrollView style={styles.modalContent} keyboardShouldPersistTaps="handled">
             <View style={styles.formGroup}>
               <Text style={styles.label}>Nome *</Text>
               <TextInput
@@ -337,6 +372,61 @@ export default function AdminFuncionariosScreen() {
                 placeholder="(00) 00000-0000"
                 keyboardType="phone-pad"
               />
+            </View>
+
+            {/* Seletor de Cargo (Role) */}
+            <View style={styles.formGroup}>
+                <Text style={styles.label}>Perfil de Acesso (Cargo no Sistema) 🛡️</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12, paddingVertical: 5 }} keyboardShouldPersistTaps="handled">
+                    <TouchableOpacity 
+                         onPress={() => {
+                             setSelectedRoleId(null);
+                         }}
+                         style={{ 
+                             paddingVertical: 10,
+                             paddingHorizontal: 16,
+                             borderRadius: 20, 
+                             borderWidth: selectedRoleId === null ? 2 : 1, 
+                             borderColor: selectedRoleId === null ? '#2196F3' : '#ddd',
+                             backgroundColor: selectedRoleId === null ? '#E3F2FD' : '#f9f9f9',
+                             flexDirection: 'row',
+                             alignItems: 'center',
+                             gap: 6
+                         }}
+                    >
+                          {selectedRoleId === null && <SafeIcon name="checkmark" size={16} color="#2196F3" fallbackText="✓" />}
+                          <Text style={{ color: selectedRoleId === null ? '#2196F3' : '#666', fontWeight: selectedRoleId === null ? 'bold' : 'normal' }}>
+                            Nenhum / Personalizado
+                          </Text>
+                    </TouchableOpacity>
+                    {rolesList.map(r => (
+                        <TouchableOpacity 
+                             key={r.id}
+                             onPress={() => {
+                                 setSelectedRoleId(r.id);
+                             }}
+                             style={{ 
+                                 paddingVertical: 10,
+                                 paddingHorizontal: 16,
+                                 borderRadius: 20, 
+                                 borderWidth: selectedRoleId === r.id ? 2 : 1, 
+                                 borderColor: selectedRoleId === r.id ? '#9C27B0' : '#ddd',
+                                 backgroundColor: selectedRoleId === r.id ? '#F3E5F5' : '#f9f9f9',
+                                 flexDirection: 'row',
+                                 alignItems: 'center',
+                                 gap: 6
+                             }}
+                        >
+                              {selectedRoleId === r.id && <SafeIcon name="checkmark" size={16} color="#9C27B0" fallbackText="✓" />}
+                              <Text style={{ color: selectedRoleId === r.id ? '#9C27B0' : '#666', fontWeight: selectedRoleId === r.id ? 'bold' : 'normal' }}>
+                                {r.nome}
+                              </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+                <Text style={{ fontSize: 12, color: '#888', marginTop: 4 }}>
+                   Selecione um cargo para definir as permissões deste funcionário.
+                </Text>
             </View>
 
             <View style={styles.formGroup}>

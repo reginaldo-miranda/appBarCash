@@ -14,7 +14,10 @@ function mapUserResponse(u) {
 // Rota padrão GET - lista usuários (mantém compatibilidade)
 router.get("/", async (req, res) => {
   try {
-    const users = await prisma.user.findMany({ orderBy: { dataInclusao: "desc" } });
+    const users = await prisma.user.findMany({ 
+      orderBy: { dataInclusao: "desc" },
+      include: { role: true, employee: true } 
+    });
     res.json(users.map(mapUserResponse));
   } catch (error) {
     console.error("Erro ao buscar usuários:", error);
@@ -25,7 +28,10 @@ router.get("/", async (req, res) => {
 // Rota para listar todos os usuários
 router.get("/list", async (req, res) => {
   try {
-    const users = await prisma.user.findMany({ orderBy: { dataInclusao: "desc" } });
+    const users = await prisma.user.findMany({ 
+      orderBy: { dataInclusao: "desc" },
+      include: { role: true, employee: true } 
+    });
     res.json(users.map(mapUserResponse));
   } catch (error) {
     console.error(error);
@@ -55,7 +61,7 @@ router.get("/:id", async (req, res) => {
 // Rota para criar usuário
 router.post("/create", async (req, res) => {
   try {
-    const { email, senha, nome, tipo, funcionario, permissoes } = req.body;
+    const { email, senha, nome, tipo, funcionario, permissoes, roleId } = req.body;
 
     if (!email || !senha) {
       return res.status(400).json({ error: "Email e senha são obrigatórios" });
@@ -88,7 +94,9 @@ router.post("/create", async (req, res) => {
         nome: nome || email.split("@")[0],
         tipo: tipo === "admin" ? "admin" : "funcionario",
         employeeId,
+        employeeId,
         permissoes: permissoes || {},
+        roleId: roleId ? Number(roleId) : null,
         ativo: true,
       },
     });
@@ -158,7 +166,7 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ error: "ID inválido" });
     }
 
-    const { nome, email, tipo, funcionario, permissoes, senha } = req.body;
+    const { nome, email, tipo, funcionario, permissoes, senha, roleId } = req.body;
 
     let employeeId = undefined;
     if (tipo === "funcionario" && funcionario && funcionario !== "admin-fixo") {
@@ -179,6 +187,7 @@ router.put("/:id", async (req, res) => {
       tipo: tipo === "admin" ? "admin" : "funcionario",
       employeeId,
       permissoes,
+      roleId: roleId ? Number(roleId) : null,
     };
 
     if (senha && typeof senha === "string" && senha.trim().length > 0) {
