@@ -241,7 +241,7 @@ export default function HomeScreen() {
         <View style={styles.userInfo}>
           <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
           <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
-          <Text style={styles.userRole}>{user?.role || 'Funcionário'}</Text>
+          <Text style={styles.userRole}>{user?.role?.nome || (typeof user?.role === 'string' ? user.role : 'Funcionário')}</Text>
         </View>
         <View style={styles.headerActions}>
           {Platform.OS === 'web' && (
