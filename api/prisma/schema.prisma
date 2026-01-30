@@ -664,3 +664,9 @@ model IdleTimeConfig {
 
   @@map("idletimeconfig")
 }
+
+model AppSetting {
+  key       String   @id
+  value     String?
+  updatedAt DateTime @default(now()) @updatedAt
+}

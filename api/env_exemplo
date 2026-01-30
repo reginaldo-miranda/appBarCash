@@ -3,7 +3,7 @@ PORT=4000
 HOST=0.0.0.0
 
 # URLs de conexão para seleção
-DATABASE_URL_LOCAL="mysql://root:saguides%40123@localhost:3306/appBar"
+DATABASE_URL_LOCAL="mysql://root:saguides%40123@localhost:3306/appBarCash"
 
 # Observação:
 # A variável DATABASE_URL efetiva será definida automaticamente pelo start-api.sh

@@ -52,7 +52,7 @@ router.post("/login", async (req, res) => {
     // Usuário admin fixo para primeiro acesso
     const adminFixo = {
       name: "Admin",
-      email: "admin@barapp.com",
+      email: "admin@admin.com",
       password: "123456",
       role: "admin",
     };

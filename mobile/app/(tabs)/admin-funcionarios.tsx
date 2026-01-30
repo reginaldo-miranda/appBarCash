@@ -44,8 +44,10 @@ export default function AdminFuncionariosScreen() {
   const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
 
   // Form state
+
   const [formData, setFormData] = useState({
     nome: '',
+    cargo: '',
     endereco: '',
     bairro: '',
     telefone: '',
@@ -127,6 +129,7 @@ export default function AdminFuncionariosScreen() {
     setEditingEmployee(employee);
     setFormData({
       nome: employee.nome,
+      cargo: (employee as any).cargo || '',
       endereco: employee.endereco || '',
       bairro: employee.bairro || '',
       telefone: employee.telefone || '',
@@ -165,6 +168,7 @@ export default function AdminFuncionariosScreen() {
   const resetForm = () => {
     setFormData({
       nome: '',
+      cargo: '',
       endereco: '',
       bairro: '',
       telefone: '',
@@ -217,6 +221,13 @@ export default function AdminFuncionariosScreen() {
           <SafeIcon name="call" size={16} color="#666" fallbackText="📞" />
           <Text style={styles.infoText}>{item.telefone || 'Não informado'}</Text>
         </View>
+
+        {(item as any).cargo ? (
+             <View style={styles.infoRow}>
+                <SafeIcon name="briefcase" size={16} color="#666" fallbackText="💼" />
+                <Text style={styles.infoText}>{(item as any).cargo}</Text>
+             </View>
+        ) : null}
         
         <View style={styles.infoRow}>
           <SafeIcon name="location" size={16} color="#666" fallbackText="📍" />
@@ -360,6 +371,16 @@ export default function AdminFuncionariosScreen() {
                 value={formData.nome}
                 onChangeText={(text) => setFormData({ ...formData, nome: text })}
                 placeholder="Nome completo"
+              />
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.label}>Cargo (Opcional)</Text>
+              <TextInput
+                style={styles.input}
+                value={formData.cargo}
+                onChangeText={(text) => setFormData({ ...formData, cargo: text })}
+                placeholder="Ex: Garçom, Cozinheiro, Motoqueiro"
               />
             </View>
 
