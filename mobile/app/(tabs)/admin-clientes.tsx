@@ -37,7 +37,7 @@ interface Customer {
   dataInclusao: Date;
 }
 
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, useFocusEffect } from 'expo-router';
 
 // ... existing imports ...
 
@@ -67,12 +67,20 @@ export default function AdminClientesScreen() {
     participaFidelidade: true,
   });
 
+  // Refresh info on focus
+  useFocusEffect(
+    React.useCallback(() => {
+        if (!hasPermission('clientes')) return;
+        loadCustomers();
+    }, [hasPermission])
+  );
+
   useEffect(() => {
     if (!hasPermission('clientes')) {
       Alert.alert('Acesso Negado', 'Você não tem permissão para acessar esta tela');
       return;
     }
-    loadCustomers();
+    // loadCustomers(); // Handled by useFocusEffect
     
     if (autoOpen === 'true') {
         resetForm();

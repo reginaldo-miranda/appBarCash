@@ -40,6 +40,7 @@ import ImpressaoNfceModal from '../src/components/ImpressaoNfceModal';
 import NfceService from '../src/services/NfceService';
 import PixModal from '../src/components/PixModal';
 import PaymentPromptModal from '../src/components/PaymentPromptModal';
+import CashbackPromptModal from '../src/components/CashbackPromptModal';
 
 
 
@@ -147,6 +148,7 @@ export default function SaleScreen() {
 
   // Payment Prompt Modal State
   const [paymentPromptVisible, setPaymentPromptVisible] = useState(false);
+  const [cashbackPromptVisible, setCashbackPromptVisible] = useState(false);
   const [pixModalVisible, setPixModalVisible] = useState(false);
 
 
@@ -1406,7 +1408,42 @@ export default function SaleScreen() {
             {!isDelivery && (
                 <TouchableOpacity
                 style={[styles.finalizeButton, { margin: 0 }]}
-                onPress={() => setModalVisible(true)}
+                onPress={async () => {
+                   // Nova Lógica: Verificar Cashback com dados ATUALIZADOS
+                   if (selectedCliente) {
+                       try {
+                           // Fetch fresh data
+                           const cRes = await api.get(`/customer/${selectedCliente.id || selectedCliente._id}`);
+                           const currentBalance = Number(cRes.data.saldoCashback || 0);
+                           
+                           // Update selected client in view if needed (optional)
+                           // setSelectedCliente(prev => ({...prev, saldoCashback: currentBalance}));
+                           
+                           if (currentBalance > 0 && totalRemaining > 0) {
+                               // Passar o saldo atualizado para o prompt via prop ou state temporário
+                               // Como o componente CashbackPromptModal usa 'balance' prop, precisamos garantir que ele receba estático ou via state.
+                               // O jeito mais limpo é atualizar o selectedCliente ou criar um state local 'promptBalance'.
+                               // Vamos atualizar o selectedCliente silentemente ou usar um state novo.
+                               
+                               // OPÇÃO: Disparar o modal e passar o valor. Mas o modal le do selectedCliente no render.
+                               // Vamos forçar update do selectedCliente
+                               setSelectedCliente({...selectedCliente, saldoCashback: currentBalance});
+                               setCashbackPromptVisible(true);
+                               return;
+                           }
+                       } catch (e) {
+                           console.log('Erro ao buscar saldo atualizado:', e);
+                       }
+                   }
+
+                   // Se não tem cliente ou falhou fetch ou saldo 0
+                   if (selectedCliente && Number(selectedCliente.saldoCashback || 0) > 0 && totalRemaining > 0) {
+                       // Fallback para o valor que já temos se o fetch falhar
+                       setCashbackPromptVisible(true);
+                   } else {
+                       setModalVisible(true);
+                   }
+                }}
                 >
                 <Text style={styles.finalizeButtonText}>
                     Finalizar Venda - R$ {totalRemaining.toFixed(2)}
@@ -1643,6 +1680,157 @@ export default function SaleScreen() {
 
 
 
+
+      <CashbackPromptModal 
+        visible={cashbackPromptVisible}
+        balance={selectedCliente ? Number(selectedCliente.saldoCashback || 0) : 0}
+        totalToPay={totalRemaining}
+        loading={finalizing}
+        onClose={() => {
+            setCashbackPromptVisible(false);
+            // Se usuário cancelar/pular o prompt, abre o modal de finalizar normal
+            setModalVisible(true);
+        }}
+        onConfirm={async (amount) => {
+            // Aplicar desconto (Pagamento parcial com cashback)
+            // 1. Fechar imediatamente para evitar travamento UI
+            setCashbackPromptVisible(false);
+            setFinalizing(true);
+
+            try {
+                if (!sale) return;
+                
+                const saleId = (sale as any).id || (sale as any)._id;
+                
+                const itemsPayload = [];
+                let remainingToPay = amount;
+                
+                if (sale.itens) {
+                   for (const item of sale.itens) {
+                       if (remainingToPay <= 0.005) break;
+                       
+                       const totalItem = Number(item.subtotal);
+                       const itemId = String(item._id || (item as any).id); // Force string ID
+                       
+                       // Calcular pagamentos já feitos
+                        let paidSoFar = 0;
+                        if (sale.caixaVendas) {
+                             sale.caixaVendas.forEach((cv: any) => {
+                                 let pagos: any[] = [];
+                                 try { 
+                                     if(Array.isArray(cv.itensPagos)) pagos = cv.itensPagos;
+                                     else pagos = JSON.parse(cv.itensPagos || '[]');
+                                 } catch{}
+                                 const p = pagos.find((pp: any) => String(pp.id) === itemId);
+                                 if(p) paidSoFar += (Number(p.paidAmount)||0);
+                             });
+                        }
+                        
+                        const itemRemaining = Math.max(0, totalItem - paidSoFar);
+                        if (itemRemaining > 0) {
+                            let toPay = Math.min(remainingToPay, itemRemaining);
+                            // Sanitize precision
+                            toPay = Number(toPay.toFixed(2));
+                            
+                            if (toPay > 0) {
+                                itemsPayload.push({
+                                    id: itemId,
+                                    paidAmount: toPay,
+                                    fullyPaid: (itemRemaining - toPay) < 0.05
+                                });
+                                remainingToPay -= toPay;
+                            }
+                        }
+                   }
+                }
+                
+                const fee = Number(sale.deliveryFee || 0);
+                if (remainingToPay > 0.005 && fee > 0) {
+                     let feePaid = 0;
+                     if (sale.caixaVendas) {
+                         sale.caixaVendas.forEach((cv: any) => {
+                            let pagos: any[] = [];
+                            try { if(Array.isArray(cv.itensPagos)) pagos = cv.itensPagos; else pagos = JSON.parse(cv.itensPagos); } catch{}
+                            const p = pagos.find((pp: any) => pp.id === 'delivery-fee');
+                            if(p) feePaid += (Number(p.paidAmount)||0);
+                         });
+                     }
+                     const feeRemaining = Math.max(0, fee - feePaid);
+                     if (feeRemaining > 0) {
+                         let toPay = Math.min(remainingToPay, feeRemaining);
+                         toPay = Number(toPay.toFixed(2));
+                         
+                         if(toPay > 0) {
+                             itemsPayload.push({
+                                 id: 'delivery-fee',
+                                 paidAmount: toPay,
+                                 fullyPaid: (feeRemaining - toPay) < 0.05
+                             });
+                             remainingToPay -= toPay;
+                         }
+                     }
+                }
+
+                // CRITICAL FIX: Ensure totalAmount matches sum of parts EXACTLY
+                const calculatedTotal = itemsPayload.reduce((acc, i) => acc + i.paidAmount, 0);
+                const safeTotal = Number(calculatedTotal.toFixed(2));
+
+                const finalPayload = {
+                    paymentInfo: {
+                        method: 'cashback',
+                        totalAmount: safeTotal
+                    },
+                    items: itemsPayload
+                };
+
+                if (itemsPayload.length === 0) {
+                     Alert.alert('Atenção', 'Não foi possível distribuir o valor entre os itens da venda. Verifique se os itens já não estão pagos.');
+                     setCashbackPromptVisible(false);
+                     return;
+                }
+
+                console.log('PAYLOAD BACKEND (Corrected):', JSON.stringify(finalPayload));
+                
+                // Show detailed error if fails
+                try {
+                    await saleService.payItems(saleId, finalPayload);
+                    
+                    // Reload sale
+                    const res = await saleService.getById(saleId);
+                    // ... (rest of logic will be handled by existing code or reload)
+                    
+                    // Success feedback
+                    Alert.alert('Sucesso', 'Cashback aplicado com sucesso! Finalize o restante da venda.');
+                    setCashbackPromptVisible(false);
+                    fetchSale(); // Refresh UI
+                    
+                } catch (innerError: any) {
+                    console.error('API REJECTED:', innerError.response?.data);
+                    const serverMsg = innerError.response?.data?.error || JSON.stringify(innerError.response?.data) || innerError.message;
+                    Alert.alert('Erro no Servidor', `O servidor rejeitou o pagamento: ${serverMsg}`);
+                    // Keep prompt open so user can try again or cancel
+                }
+                setSale(res.data);
+                
+                // Sucesso: Abrir modal principal diretamente sem alerta (com delay para transição)
+                setTimeout(() => {
+                    setModalVisible(true);
+                }, 500);
+
+            } catch (e: any) {
+                const msg = 'Falha ao aplicar cashback: ' + (e.message || '');
+                console.error(msg);
+                if (Platform.OS === 'web') window.alert(msg);
+                else Alert.alert('Erro', msg);
+                // Mesmo com erro, se fechou o prompt, talvez devêssemos reabrir o modal principal? 
+                // Sim, para o usuario nao ficar no limbo.
+                setTimeout(() => setModalVisible(true), 500); 
+            } finally {
+                setFinalizing(false);
+            }
+        }}
+      />
+
       <Modal
         visible={modalVisible}
         transparent
@@ -1690,10 +1878,22 @@ export default function SaleScreen() {
             </TouchableOpacity>
 
             {selectedCliente && (
-               <View style={{ marginBottom: 16, backgroundColor: '#E8F5E9', padding: 8, borderRadius: 8 }}>
+               <View style={{ marginBottom: 16, backgroundColor: '#E8F5E9', padding: 8, borderRadius: 8, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
                   <Text style={{ color: '#2E7D32', fontSize: 13, textAlign: 'center' }}>
                      Saldo Cashback: <Text style={{ fontWeight: 'bold' }}>R$ {Number(selectedCliente.saldoCashback || 0).toFixed(2)}</Text>
                   </Text>
+                  {(Number(selectedCliente.saldoCashback || 0) > 0 && totalRemaining > 0) && (
+                      <TouchableOpacity 
+                        style={{ backgroundColor: '#2E7D32', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}
+                        onPress={() => {
+                            setModalVisible(false); // Fecha o pai para evitar sobreposicao visual ruim (opcional) ou mantem.
+                            // Melhor fechar o pai temporariamente para o prompt ficar limpo, e o prompt reabre ele no onClose.
+                            setCashbackPromptVisible(true);
+                        }}
+                      >
+                          <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>USAR</Text>
+                      </TouchableOpacity>
+                  )}
                </View>
             )}
             </>

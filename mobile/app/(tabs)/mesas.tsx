@@ -30,6 +30,7 @@ import { STORAGE_KEYS } from '../../src/services/storage';
   import PasswordConfirmModal from '../../src/components/PasswordConfirmModal';
 import ReceiptModal from '../../src/components/ReceiptModal';
 import PixModal from '../../src/components/PixModal';
+import CashbackPromptModal from '../../src/components/CashbackPromptModal';
 import { useFocusEffect } from '@react-navigation/native';
 
 interface Funcionario {
@@ -94,6 +95,8 @@ export default function MesasScreen() {
   const [fecharValorPago, setFecharValorPago] = useState<number>(0);
   const [finalizandoMesa, setFinalizandoMesa] = useState(false);
   const [pixModalVisible, setPixModalVisible] = useState(false);
+  const [cashbackPromptVisible, setCashbackPromptVisible] = useState(false);
+  const [cashbackBalance, setCashbackBalance] = useState(0);
 
 
   // Estados para cancelar mesa
@@ -1165,10 +1168,30 @@ useEffect(() => {
       }
       const total = (activeSale.itens || []).reduce((sum: number, item: any) => sum + (item.subtotal || 0), 0);
       const totalPago = (activeSale.caixaVendas || []).reduce((acc: number, cv: any) => acc + (Number(cv.valor) || 0), 0);
+      
       setFecharTotal(total);
       setFecharValorPago(totalPago);
       setFecharSaleId(activeSale._id);
-      setFecharMesaModalVisible(true);
+
+      // Check for Cashback
+      let clientBalance = 0;
+      if (activeSale.clienteId) {
+          try {
+             // Fetch client updated data
+             const clientRes = await api.get(`/customer/${activeSale.clienteId}`);
+             clientBalance = Number(clientRes.data.saldoCashback || 0);
+          } catch {}
+      }
+      
+      const remaining = total - totalPago;
+
+      if (clientBalance > 0 && remaining > 0) {
+          setCashbackBalance(clientBalance);
+          setCashbackPromptVisible(true);
+      } else {
+          setFecharMesaModalVisible(true);
+      }
+
     } catch (error: any) {
       console.error('Erro ao carregar venda da mesa:', error);
       Alert.alert('Erro', 'Não foi possível buscar a venda da mesa.');
@@ -2194,6 +2217,114 @@ useEffect(() => {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      <CashbackPromptModal 
+        visible={cashbackPromptVisible}
+        balance={cashbackBalance}
+        totalToPay={fecharTotal - fecharValorPago} // Valor restante real
+        loading={finalizandoMesa}
+        onClose={() => {
+            setCashbackPromptVisible(false);
+            setFecharMesaModalVisible(true);
+        }}
+        onConfirm={async (amount) => {
+           // 1. Fechar modal imediatamente para dar feedback visual
+           setCashbackPromptVisible(false);
+           setFinalizandoMesa(true); // Ativa loading global se houver, ou apenas bloqueia
+
+           try {
+               // Validação de segurança
+               if(!fecharSaleId) {
+                   throw new Error('ID da venda perdido. Tente novamente.');
+               }
+
+               // 2. Busca dados da venda
+               const saleRes = await saleService.getById(fecharSaleId);
+               const sale = saleRes.data;
+               if(!sale || !sale.itens) throw new Error('Dados da venda incompletos.');
+
+               // 3. Monta payload de pagamento (Cashback)
+               const itemsPayload = [];
+               let remainingToPay = amount;
+               
+               for (const item of sale.itens) {
+                   if (remainingToPay <= 0.005) break;
+                    let paidSoFar = 0;
+                    if (sale.caixaVendas) {
+                         sale.caixaVendas.forEach((cv: any) => {
+                             let pagos: any[] = [];
+                             try { 
+                                 if(Array.isArray(cv.itensPagos)) pagos = cv.itensPagos;
+                                 else pagos = JSON.parse(cv.itensPagos || '[]');
+                             } catch{}
+                             const p = pagos.find((pp: any) => String(pp.id) === String(item._id || (item as any).id));
+                             if(p) paidSoFar += (Number(p.paidAmount)||0);
+                         });
+                    }
+                    const itemTotal = Number(item.subtotal);
+                    const itemRemaining = Math.max(0, itemTotal - paidSoFar);
+                    if (itemRemaining > 0) {
+                        const toPay = Math.min(remainingToPay, itemRemaining);
+                        itemsPayload.push({
+                            id: item._id || (item as any).id,
+                            paidAmount: toPay,
+                            fullyPaid: (itemRemaining - toPay) < 0.05
+                        });
+                        remainingToPay -= toPay;
+                    }
+               }
+               
+               const fee = Number(sale.deliveryFee || 0);
+               if (remainingToPay > 0.005 && fee > 0) {
+                     let feePaid = 0;
+                     if (sale.caixaVendas) {
+                         sale.caixaVendas.forEach((cv: any) => {
+                            let pagos: any[] = [];
+                            try { if(Array.isArray(cv.itensPagos)) pagos = cv.itensPagos; else pagos = JSON.parse(cv.itensPagos); } catch{}
+                            const p = pagos.find((pp: any) => pp.id === 'delivery-fee');
+                            if(p) feePaid += (Number(p.paidAmount)||0);
+                         });
+                     }
+                     const feeRemaining = Math.max(0, fee - feePaid);
+                     if (feeRemaining > 0) {
+                         const toPay = Math.min(remainingToPay, feeRemaining);
+                         itemsPayload.push({
+                             id: 'delivery-fee',
+                             paidAmount: toPay,
+                             fullyPaid: (feeRemaining - toPay) < 0.05
+                         });
+                         remainingToPay -= toPay;
+                     }
+                }
+
+               // 4. Executa pagamento
+               await saleService.payItems(fecharSaleId, {
+                   paymentInfo: { method: 'cashback', totalAmount: amount },
+                   items: itemsPayload
+               });
+
+               // 5. Atualiza valores
+               const updated = await saleService.getById(fecharSaleId);
+               const v = updated.data;
+               const p = (v?.caixaVendas || []).reduce((acc: number, cv: any) => acc + (Number(cv.valor) || 0), 0);
+               setFecharValorPago(p);
+               
+               // O modal de fechamento abre no finally ou setTimeout abaixo
+               
+           } catch (e: any) {
+               const msg = 'Falha ao usar cashback: ' + (e.message || e);
+               console.error(msg);
+               if (Platform.OS === 'web') alert(msg);
+               else Alert.alert('Erro', msg);
+           } finally {
+               setFinalizandoMesa(false);
+               // SEMPRE abre o modal de fechamento, com ou sem sucesso no cashback, para não travar o fluxo
+               setTimeout(() => {
+                    setFecharMesaModalVisible(true);
+               }, 500);
+           }
+        }}
+      />
 
       {/* Modal de pagamento para fechar mesa */}
       <Modal
