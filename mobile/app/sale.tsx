@@ -264,7 +264,25 @@ export default function SaleScreen() {
               // Por enquanto, se recarregar, o mapa pode ficar sem marker até o usuário buscar de novo ou se salvarmos lat/lng no sale (recomendado).
               // Mas o schema não tem lat/lng no Sale, só Address.
           }
-          if (sale.cliente) setSelectedCliente(sale.cliente);
+          if (sale.cliente) {
+              // Verificação robusta: se o cliente da venda vier incompleto (sem saldo), buscar completo
+              if (sale.cliente.saldoCashback === undefined && (sale.cliente.id || (sale.cliente as any)._id)) {
+                  const cid = sale.cliente.id || (sale.cliente as any)._id;
+                  customerService.getById(cid).then(res => {
+                      if (res.data) {
+                          console.log('[DEBUG] Cliente recarregado com saldo:', res.data.saldoCashback);
+                          setSelectedCliente(res.data);
+                      } else {
+                          setSelectedCliente(sale.cliente);
+                      }
+                  }).catch(err => {
+                      console.error('Erro ao recarregar cliente completo:', err);
+                      setSelectedCliente(sale.cliente);
+                  });
+              } else {
+                  setSelectedCliente(sale.cliente);
+              }
+          }
           if (sale.entregador) setSelectedEntregador(sale.entregador);
       }
   }, [sale]);

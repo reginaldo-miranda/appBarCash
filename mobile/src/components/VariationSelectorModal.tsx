@@ -70,9 +70,9 @@ export default function VariationSelectorModal({ visible, product, onClose, onCo
       const filtered = ids.length > 0
         ? all.filter((p: any) => {
             const catId = Number(p?.categoriaId || p?.categoria || 0);
-            return Number.isInteger(catId) && ids.includes(catId);
+            return Number.isInteger(catId) && ids.includes(catId) && String(p?._id ?? p?.id) !== String(product?._id ?? product?.id);
           })
-        : all;
+        : all.filter((p: any) => String(p?._id ?? p?.id) !== String(product?._id ?? product?.id));
       const normalized = filtered.filter((p: any) => !!p?.ativo && !!p?.disponivel).map((p: any) => ({
         _id: String(p?._id ?? p?.id ?? ''),
         nome: p?.nome ?? p?.nomeProduto ?? 'Produto',

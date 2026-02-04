@@ -53,6 +53,7 @@ router.get("/", async (req, res) => {
 // POST: Criar ou Atualizar (Upsert logic - garantindo apenas 1 registro)
 router.post("/", async (req, res) => {
   const data = req.body;
+  console.log('>>> RECEIVING POST /company', JSON.stringify(data, null, 2));
   
   // Converter tipos decimais/numéricos se necessário
   if (data.valorMensalidade) data.valorMensalidade = Number(data.valorMensalidade);
@@ -75,13 +76,18 @@ router.post("/", async (req, res) => {
       return isNaN(n) ? def : n;
   };
 
+  // Garantir defaults para campos obrigatórios não nulos, se possível
+  if (data.pointsPerCurrency === undefined || data.pointsPerCurrency === null) data.pointsPerCurrency = 1;
   data.valorMensalidade = toDec(data.valorMensalidade);
   data.serieNfce = toInt(data.serieNfce, 1);
   data.numeroInicialNfce = toInt(data.numeroInicialNfce, 1);
   data.diaVencimento = toInt(data.diaVencimento, null);
   data.diasAtraso = toInt(data.diasAtraso, 0);
   data.cashbackPercent = toDec(data.cashbackPercent);
-  data.pointsPerCurrency = toDec(data.pointsPerCurrency);
+  // pointsPerCurrency must be a number, not null.
+  const ppc = toDec(data.pointsPerCurrency);
+  data.pointsPerCurrency = ppc === null ? 1 : ppc;
+
   data.valorResgate = toDec(data.valorResgate);
   data.pontosParaResgate = toInt(data.pontosParaResgate, 0);
 
@@ -102,6 +108,80 @@ router.post("/", async (req, res) => {
 
     if (existing) {
       // Atualiza
+      console.log('--- UPDATING EXISTING COMPANY ---');
+      console.log('Incoming Payload keys:', Object.keys(data));
+
+      // Separate explicit fields we want to ensure are updated
+      // Use helper to parse numbers safely from strings or numbers
+      const safeNum = (val, isInt = false) => {
+         if (val === undefined || val === null || val === '') return undefined;
+         if (typeof val === 'string') {
+             val = val.replace(',', '.');
+         }
+         const n = Number(val);
+         if (isNaN(n)) return undefined;
+         return isInt ? parseInt(n) : n;
+      };
+
+      const cashbackPercent = safeNum(req.body.cashbackPercent);
+      // Ensure pointsPerCurrency is never null/undefined, default to 1
+      const pointsPerCurrencyRaw = safeNum(req.body.pointsPerCurrency);
+      const pointsPerCurrency = pointsPerCurrencyRaw !== undefined ? pointsPerCurrencyRaw : 1; 
+      
+      const pontosParaResgate = safeNum(req.body.pontosParaResgate, true);
+      const valorResgate = safeNum(req.body.valorResgate);
+
+      // Construct base payload
+      const { 
+        deliveryRanges, 
+        id, createdAt, updatedAt, products, users, sales, 
+        ...otherData 
+      } = data;
+
+      const updatePayload = {
+        ...otherData,
+        pointsPerCurrency: otherData.pointsPerCurrency || 1, // Fallback for base data
+        updatedAt: new Date(),
+      };
+
+      // Explicitly override/set these fields if they exist in request
+      if (cashbackPercent !== undefined) updatePayload.cashbackPercent = cashbackPercent;
+      
+      // Always update pointsPerCurrency if in request, or ensure it's valid
+      if (req.body.pointsPerCurrency !== undefined) {
+         updatePayload.pointsPerCurrency = pointsPerCurrency;
+      } else if (!updatePayload.pointsPerCurrency) {
+         updatePayload.pointsPerCurrency = 1;
+      }
+
+      if (pontosParaResgate !== undefined) updatePayload.pontosParaResgate = pontosParaResgate;
+      if (valorResgate !== undefined) updatePayload.valorResgate = valorResgate;
+
+      console.log('Final Update Payload:', JSON.stringify(updatePayload, null, 2));
+
+      if (deliveryRanges !== undefined) {
+          updatePayload.deliveryRanges = {
+            deleteMany: {},
+            create: Array.isArray(deliveryRanges) ? deliveryRanges.map(r => ({
+              minDist: Number(r.minDist),
+              maxDist: Number(r.maxDist),
+              price: Number(r.price)
+            })) : []
+          };
+      }
+
+      const updated = await prisma.company.update({
+        where: { id: existing.id },
+        data: updatePayload,
+        include: { deliveryRanges: true }
+      });
+      return res.json({ message: "Dados atualizados com sucesso", company: updated });
+    } else {
+      // Cria
+      // Cria
+      console.log('--- POST /company DEBUG ---');
+      console.log('Incoming Data:', JSON.stringify(data, null, 2));
+
       // Sanitização: remove campos relacionais ou metadados que não devem ser salvos diretamente na tabela Company
       const { 
         deliveryRanges, 
@@ -114,37 +194,12 @@ router.post("/", async (req, res) => {
         ...companyData 
       } = data;
       
-      const updated = await prisma.company.update({
-        where: { id: existing.id },
-        data: { 
-          ...companyData, 
-          updatedAt: new Date(),
-          deliveryRanges: {
-            deleteMany: {},
-            create: Array.isArray(deliveryRanges) ? deliveryRanges.map(r => ({
-              minDist: Number(r.minDist),
-              maxDist: Number(r.maxDist),
-              price: Number(r.price)
-            })) : []
-          }
-        },
-        include: { deliveryRanges: true }
-      });
-      return res.json({ message: "Dados atualizados com sucesso", company: updated });
-    } else {
-      // Cria
-      // Cria
-      // Sanitização:
-      const { 
-        deliveryRanges, 
-        id, 
-        createdAt, 
-        updatedAt, 
-        products, 
-        users, 
-        sales, 
-        ...companyData 
-      } = data;
+      const updatePayload = {
+        ...companyData, 
+        updatedAt: new Date()
+      };
+      
+      console.log('Update Payload:', JSON.stringify(updatePayload, null, 2));
 
       // Se for a primeira criação (via tela de delivery), pode faltar dados obrigatórios da empresa
       // Preencher com defaults para não quebrar

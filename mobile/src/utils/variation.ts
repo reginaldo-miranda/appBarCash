@@ -1,7 +1,7 @@
 export function computeVariationPrice(rule: 'mais_caro' | 'media' | 'fixo', basePrice: number, prices: number[], fixed?: number, fractions?: number[]): number {
   const arr = Array.isArray(prices) ? prices.map((n) => Number(n)).filter((n) => Number.isFinite(n)) : [];
   if (rule === 'mais_caro') {
-    return arr.length > 0 ? Math.max(...arr) : Number(basePrice || 0);
+    return arr.length > 0 ? Math.max(Number(basePrice || 0), ...arr) : Number(basePrice || 0);
   }
   if (rule === 'media') {
     const fracs = Array.isArray(fractions) ? fractions.map((f) => Number(f)).filter((f) => Number.isFinite(f) && f > 0) : [];

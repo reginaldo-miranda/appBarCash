@@ -11,6 +11,7 @@ import {
   Platform,
   NativeModules,
   Modal,
+  ToastAndroid,
 } from "react-native";
 // import removido: Ionicons não é necessário, usamos SafeIcon
 import { router } from "expo-router";
@@ -27,12 +28,14 @@ import { STORAGE_KEYS } from "../src/services/storage";
 import Constants from "expo-constants";
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState("admin@barapp.com");
+ // const [email, setEmail] = useState("admin@barapp.com");
+  const [email, setEmail] = useState("admin@admin.com");
   const [password, setPassword] = useState("123456");
   const [showPassword, setShowPassword] = useState(false);
   const { login, loading, clearAllStorage } = useAuth();
   const [loginLoading, setLoginLoading] = useState(false);
   const passwordRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInput>(null);
   const ignoreStorageInitRef = useRef(false);
 
   // Estado para seleção e teste da base da API
@@ -40,6 +43,18 @@ export default function LoginScreen() {
     "lan"
   );
   const [apiUrl, setApiUrl] = useState("");
+
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (showError) {
+      const timer = setTimeout(() => {
+        setShowError(false);
+      }, 3000); // Mensagem desaparece após 3 segundos
+      return () => clearTimeout(timer);
+    }
+  }, [showError]);
 
   // Tentativa automática de conexão LAN ao selecionar/estar em 'lan'
   const autoLanAttemptedRef = useRef(false);
@@ -600,14 +615,20 @@ export default function LoginScreen() {
         router.replace("/(tabs)");
       } else {
         console.log("🚀 Login falhou:", result.message);
-        Alert.alert(
-          "Erro de Login",
-          result.message || "Email ou senha incorretos"
-        );
+        
+        // Exibe mensagem de erro customizada
+        setErrorMessage("Usuario ou Senha errado, tente novamente");
+        setShowError(true);
+        
+        // Foca novamente no email para facilitar correcao
+        if (emailRef.current) {
+            emailRef.current.focus();
+        }
       }
     } catch (error: any) {
       console.error("🚀 Erro inesperado no login:", error);
-      Alert.alert("Erro de Login", "Erro inesperado ao fazer login");
+      setErrorMessage("Erro inesperado ao fazer login");
+      setShowError(true);
     } finally {
       setLoginLoading(false);
     }
@@ -660,6 +681,7 @@ export default function LoginScreen() {
               style={styles.inputIcon}
             />
             <TextInput
+              ref={emailRef}
               style={styles.input}
               placeholder="Email"
               value={email}
@@ -731,6 +753,12 @@ export default function LoginScreen() {
               <Text style={styles.loginButtonText}>Entrar</Text>
             )}
           </TouchableOpacity>
+
+          {showError && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.footer}>
@@ -1127,6 +1155,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     marginLeft: 6,
+  },
+  errorContainer: {
+    backgroundColor: "#FFEBEE",
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: "#FFCDD2",
+    alignItems: "center",
+  },
+  errorText: {
+    color: "#D32F2F",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
 

@@ -115,7 +115,7 @@ router.post('/create', async (req, res) => {
       include: {
         funcionario: { select: { nome: true } },
         entregador: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
       },
@@ -293,7 +293,7 @@ router.put('/:id/update', async (req, res) => {
       include: {
         funcionario: { select: { nome: true } },
         entregador: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
       }
@@ -457,7 +457,7 @@ router.get('/mesa/:mesaId', async (req, res) => {
       include: {
         funcionario: { select: { nome: true } },
         entregador: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { select: { numero: true, nome: true } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
         caixaVendas: true,
@@ -486,7 +486,7 @@ router.get('/:id', async (req, res) => {
       include: {
         funcionario: { select: { nome: true } },
         entregador: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { select: { numero: true, nome: true } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
         caixaVendas: true,
@@ -778,7 +778,7 @@ router.delete('/:id/item/:produtoId', async (req, res) => {
       where: { id },
       include: {
         funcionario: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
       },
     });
@@ -890,7 +890,7 @@ router.delete('/:id/item/:produtoId', async (req, res) => {
       where: { id },
       include: {
         funcionario: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
       },
     });
@@ -989,7 +989,7 @@ router.put('/:id/discount', async (req, res) => {
       where: { id },
       include: {
         funcionario: { select: { nome: true } },
-        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true } },
+        cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         itens: { include: { product: { select: { nome: true, precoVenda: true } } } },
       },
     });

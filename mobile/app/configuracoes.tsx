@@ -788,12 +788,13 @@ const getEnvApiUrl = (): string | undefined => {
         </View>
 
         <View style={styles.formGroup}>
-          <Text style={styles.label}>CSC (Código de Segurança)</Text>
+          <Text style={styles.label}>NFC-e ID (Token)</Text>
           <TextInput
-            placeholder="Ex: SEU-CODIGO-CSC-AQUI..."
-            style={styles.input}
-            value={csc}
-            onChangeText={setCsc}
+             placeholder="Ex: 000001"
+             style={styles.input}
+             value={cscId}
+             onChangeText={setCscId}
+             keyboardType="numeric"
           />
         </View>
 
@@ -827,19 +828,19 @@ const getEnvApiUrl = (): string | undefined => {
           </View>
         </View>
 
-        <TouchableOpacity style={[styles.button, styles.primaryButton, {backgroundColor: '#673AB7'}]} onPress={handleSaveFiscal} activeOpacity={0.8}>
-          {savingFiscal ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Ionicons name="save" size={18} color="#fff" />
-              <Text style={styles.primaryButtonText}> Salvar Configuração Fiscal</Text>
-            </>
-          )}
+        <TouchableOpacity style={[styles.button, styles.primaryButton]} onPress={handleSaveFiscal} activeOpacity={0.8}>
+           {savingFiscal ? (
+             <ActivityIndicator color="#fff" />
+           ) : (
+             <>
+               <Ionicons name="save" size={18} color="#fff" />
+               <Text style={styles.primaryButtonText}> Salvar Fiscal</Text>
+             </>
+           )}
         </TouchableOpacity>
-
       </View>
 
+      <ConfiguracaoFidelidade />
 
       {/* Seção Gestão de Impressoras */}
       <View style={styles.section}>
@@ -884,7 +885,8 @@ const getEnvApiUrl = (): string | undefined => {
         </TouchableOpacity>
       </View>
 
-      {/* Modal de Cadastro de Impressora */}
+      <View style={{ height: 100 }} />
+
       <Modal visible={printerModalVisible} transparent animationType="fade" onRequestClose={() => setPrinterModalVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -1025,6 +1027,146 @@ const getEnvApiUrl = (): string | undefined => {
       </Modal>
     </ScrollView>
   );
+}
+
+
+function ConfiguracaoFidelidade() {
+    const [cashbackPercent, setCashbackPercent] = useState('0');
+    const [pontosResgate, setPontosResgate] = useState('0');
+    const [valorResgate, setValorResgate] = useState('0');
+    const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            const { companyService } = require('../src/services/api');
+            const res = await companyService.get();
+            if (res.data) {
+                // Ensure we handle both numbers and strings safely
+                const cb = res.data.cashbackPercent !== undefined ? String(res.data.cashbackPercent) : '0';
+                const pr = res.data.pontosParaResgate !== undefined ? String(res.data.pontosParaResgate) : '0';
+                const vr = res.data.valorResgate !== undefined ? String(res.data.valorResgate) : '0';
+                
+                setCashbackPercent(cb.replace('.', ','));
+                setPontosResgate(pr);
+                setValorResgate(vr.replace('.', ','));
+            }
+        } catch (e) {
+            console.log('Erro ao carregar fidelidade:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const { companyService } = require('../src/services/api');
+            
+            // Clean inputs: replace commas with dots, remove non-numeric chars (except dot)
+            const parseDecimal = (val) => {
+                if (!val) return 0;
+                const clean = val.replace(',', '.');
+                return parseFloat(clean) || 0;
+            };
+            
+            const parseIntSafe = (val) => {
+               if (!val) return 0;
+               return parseInt(val.replace(/\D/g, '')) || 0;
+            };
+
+            const payload = {
+                cashbackPercent: parseDecimal(cashbackPercent),
+                pontosParaResgate: parseIntSafe(pontosResgate),
+                valorResgate: parseDecimal(valorResgate),
+                pointsPerCurrency: 1 // Default/Fixed value to prevent backend error
+            };
+            
+            console.log('Saving Fidelidade:', payload);
+
+            await companyService.update(payload);
+            Alert.alert('Fidelidade', 'Configurações de Cashback salvas com sucesso!');
+            
+            // Reload to confirm format
+            loadData();
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Erro', 'Falha ao salvar configurações de fidelidade.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+      <View style={styles.section}>
+        <View style={styles.sectionHeader}>
+          <Ionicons name="gift" size={20} color="#E91E63" />
+          <Text style={styles.sectionTitle}>Fidelidade e Cashback</Text>
+        </View>
+
+        {loading ? (
+            <ActivityIndicator size="small" color="#E91E63" />
+        ) : (
+            <>
+                <View style={styles.formGroup}>
+                    <Text style={styles.label}>% Cashback por Venda</Text>
+                    <TextInput
+                        placeholder="Ex: 5"
+                        style={styles.input}
+                        value={cashbackPercent}
+                        onChangeText={setCashbackPercent}
+                        keyboardType="numeric"
+                    />
+                    <Text style={{ fontSize: 10, color: '#666', marginTop: 4 }}>
+                        Porcentagem do valor da venda que volta como crédito para o cliente.
+                    </Text>
+                </View>
+
+                <View style={{ flexDirection: 'row', gap: 10 }}>
+                    <View style={[styles.formGroup, { flex: 1 }]}>
+                        <Text style={styles.label}>Regra: Pontos Necessários</Text>
+                        <TextInput
+                            placeholder="Ex: 100"
+                            style={styles.input}
+                            value={pontosResgate}
+                            onChangeText={setPontosResgate}
+                            keyboardType="numeric"
+                        />
+                    </View>
+                    <View style={[styles.formGroup, { flex: 1 }]}>
+                        <Text style={styles.label}>Valor do Resgate (R$)</Text>
+                        <TextInput
+                            placeholder="Ex: 10"
+                            style={styles.input}
+                            value={valorResgate}
+                            onChangeText={setValorResgate}
+                            keyboardType="numeric"
+                        />
+                    </View>
+                </View>
+                <Text style={{ fontSize: 10, color: '#666', marginTop: -10, marginBottom: 16 }}>
+                    Ex: A cada {pontosResgate || 100} pontos, o cliente pode abater R$ {valorResgate || 10}.
+                </Text>
+
+                <TouchableOpacity style={[styles.button, styles.primaryButton, { backgroundColor: '#E91E63' }]} onPress={handleSave} activeOpacity={0.8}>
+                    {saving ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <>
+                            <Ionicons name="save" size={18} color="#fff" />
+                            <Text style={styles.primaryButtonText}> Salvar Fidelidade</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            </>
+        )}
+      </View>
+    );
 }
 
 const styles = StyleSheet.create({

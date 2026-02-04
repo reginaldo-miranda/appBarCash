@@ -2,8 +2,13 @@ import { computeVariationPrice } from '../src/utils/variation';
 
 describe('computeVariationPrice', () => {
   test('mais_caro with multiple prices', () => {
+    // If base is 30, and options are 10, 20, 25. Result should be 30.
     const r = computeVariationPrice('mais_caro', 30, [10, 20, 25]);
-    expect(r).toBe(25);
+    expect(r).toBe(30);
+
+    // If base is 10, and options are 20, 30. Result should be 30.
+    const r2 = computeVariationPrice('mais_caro', 10, [20, 30]);
+    expect(r2).toBe(30);
   });
 
   test('media with multiple prices', () => {
