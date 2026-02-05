@@ -1198,7 +1198,7 @@ const isLocalHost = (url?: string): boolean => {
   try {
     const u = new URL(String(url));
     const host = u.hostname;
-    if (Platform.OS === "web") return false;
+    if (Platform.OS === "web" || Platform.OS === "windows" || Platform.OS === "macos") return false;
     return (
       host === "localhost" ||
       host.startsWith("127.") ||
@@ -1206,7 +1206,7 @@ const isLocalHost = (url?: string): boolean => {
       host === "0.0.0.0"
     );
   } catch {
-    if (Platform.OS === "web") return false;
+    if (Platform.OS === "web" || Platform.OS === "windows" || Platform.OS === "macos") return false;
     const s = String(url).toLowerCase();
     const withoutProto = s.includes("://") ? s.split("://")[1] : s;
     const hostOnly = withoutProto.split("/")[0].split(":")[0];

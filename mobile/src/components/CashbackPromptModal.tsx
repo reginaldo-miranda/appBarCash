@@ -37,10 +37,17 @@ export default function CashbackPromptModal({
 
   useEffect(() => {
     if (visible) {
-      setAmount(maxPossible.toFixed(2));
-      setUseAll(true);
+        // Only set default if amount is empty or we want to force reset on open
+        // Check if we already have a value to avoid overwriting during re-renders
+        if (!amount || useAll) {
+             setAmount(maxPossible.toFixed(2));
+             setUseAll(true);
+        }
+    } else {
+        setAmount('');
+        setUseAll(true);
     }
-  }, [visible, balance, totalToPay]);
+  }, [visible, maxPossible]); // Added maxPossible dependency safely
 
   const handleConfirm = () => {
     // Robust parsing: replace comma with dot, remove non-numeric chars except dot/comma
@@ -61,9 +68,9 @@ export default function CashbackPromptModal({
       Alert.alert('Saldo Insuficiente', `O valor não pode exceder o saldo de R$ ${balance.toFixed(2)}`);
       return;
     }
-    // Tolerance slightly increased
+    // Tolerance slightly increased for float comparison
     if (valFixed > totalToPay + 0.05) { 
-       Alert.alert('Valor Excedente', `O valor não pode ser maior que o total a pagar.`);
+       Alert.alert('Valor Excedente', `O valor R$ ${valFixed} não pode ser maior que o total a pagar R$ ${totalToPay.toFixed(2)}.`);
        return;
     }
 

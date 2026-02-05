@@ -2297,9 +2297,12 @@ useEffect(() => {
                      }
                 }
 
-               // 4. Executa pagamento
+               // 4. Executa pagamento (com correção de precisão)
+               const calculatedTotal = itemsPayload.reduce((acc, i) => acc + i.paidAmount, 0);
+               const safeTotal = Number(calculatedTotal.toFixed(2));
+
                await saleService.payItems(fecharSaleId, {
-                   paymentInfo: { method: 'cashback', totalAmount: amount },
+                   paymentInfo: { method: 'cashback', totalAmount: safeTotal },
                    items: itemsPayload
                });
 

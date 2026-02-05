@@ -8,7 +8,7 @@ function normalizeFormaPagamento(fp) {
   if (!fp) return null;
   const val = String(fp).toLowerCase();
   if (val === 'cartão') return 'cartao';
-  if (['dinheiro', 'cartao', 'pix'].includes(val)) return val;
+  if (['dinheiro', 'cartao', 'pix', 'cashback'].includes(val)) return val;
   return null;
 }
 

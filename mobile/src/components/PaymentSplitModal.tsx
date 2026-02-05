@@ -353,6 +353,20 @@ export default function PaymentSplitModal({
         Alert.alert('Erro', 'Venda não identificada.');
         return;
     }
+    
+    // Validar Saldo de Cashback
+    if (paymentMethod === 'cashback' && sale.cliente) {
+        const saldo = Number(sale.cliente.saldoCashback || 0);
+        // totalSelected inclui a soma dos inputs. 
+        // Descontamos pontos se houver (discountPoints não é subtraido do totalSelected aqui, mas do totalAmount enviado ao backend)
+        // O usuário digita o 'valor a pagar'.
+        
+        if (totalSelected > saldo) {
+             Alert.alert('Saldo Insuficiente', `O valor selecionado (R$ ${totalSelected.toFixed(2)}) excede o saldo de cashback do cliente (R$ ${saldo.toFixed(2)}).`);
+             return;
+        }
+    }
+    
     try {
       setLoading(true);
 

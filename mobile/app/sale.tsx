@@ -41,6 +41,7 @@ import NfceService from '../src/services/NfceService';
 import PixModal from '../src/components/PixModal';
 import PaymentPromptModal from '../src/components/PaymentPromptModal';
 import CashbackPromptModal from '../src/components/CashbackPromptModal';
+import { calculateRemainingItemsPayload } from '../src/utils/paymentHelpers';
 
 
 
@@ -1280,10 +1281,13 @@ export default function SaleScreen() {
 
     try {
       setFinalizing(true);
-      const total = cart.reduce((sum, item) => sum + item.subtotal, 0);
+      const totalItems = cart.reduce((sum, item) => sum + item.subtotal, 0);
+      const totalPaid = (sale as any)?.caixaVendas?.reduce((sum: number, cv: any) => sum + Number(cv.valor), 0) || 0;
+      const totalRemaining = Math.max(0, totalItems - totalPaid);
+      
       const finalizeData = {
         formaPagamento: paymentMethod,
-        total: total,
+        total: totalRemaining, // Send ONLY the remainder
         ...(options?.pontosUsados ? { pontosUsados: options.pontosUsados } : {})
       };
       
@@ -1738,7 +1742,7 @@ export default function SaleScreen() {
                                     paidAmount: toPay,
                                     fullyPaid: (itemRemaining - toPay) < 0.05
                                 });
-                                remainingToPay -= toPay;
+                                remainingToPay = Number((remainingToPay - toPay).toFixed(2));
                             }
                         }
                    }
@@ -1766,7 +1770,7 @@ export default function SaleScreen() {
                                  paidAmount: toPay,
                                  fullyPaid: (feeRemaining - toPay) < 0.05
                              });
-                             remainingToPay -= toPay;
+                             remainingToPay = Number((remainingToPay - toPay).toFixed(2));
                          }
                      }
                 }
@@ -1798,11 +1802,12 @@ export default function SaleScreen() {
                     // Reload sale
                     const res = await saleService.getById(saleId);
                     // ... (rest of logic will be handled by existing code or reload)
+                    setSale(res.data);
                     
                     // Success feedback
                     Alert.alert('Sucesso', 'Cashback aplicado com sucesso! Finalize o restante da venda.');
                     setCashbackPromptVisible(false);
-                    fetchSale(); // Refresh UI
+                    // fetchSale(); // Removed undefined function
                     
                 } catch (innerError: any) {
                     console.error('API REJECTED:', innerError.response?.data);
@@ -1810,7 +1815,6 @@ export default function SaleScreen() {
                     Alert.alert('Erro no Servidor', `O servidor rejeitou o pagamento: ${serverMsg}`);
                     // Keep prompt open so user can try again or cancel
                 }
-                setSale(res.data);
                 
                 // Sucesso: Abrir modal principal diretamente sem alerta (com delay para transição)
                 setTimeout(() => {
@@ -1912,7 +1916,7 @@ export default function SaleScreen() {
 
             
             <TouchableOpacity 
-              style={[styles.modalButton, { backgroundColor: '#FF9800', marginBottom: 20, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
+              style={[styles.modalButton, { backgroundColor: '#FF9800', marginBottom: 12, paddingVertical: 10, width: '100%', flexDirection: 'row', justifyContent: 'center', gap: 8 }]}
               onPress={() => {
                 setModalVisible(false);
                 setSplitModalVisible(true);
@@ -1985,8 +1989,6 @@ export default function SaleScreen() {
                   }
 
                   // Se falta pagar, realiza o pagamento total com o método selecionado e DEPOIS finaliza
-                  console.log(`💰 Pagando restante (${totalRemaining}) e finalizando...`);
-                  
                   try {
                       setFinalizing(true);
                       
@@ -2468,9 +2470,9 @@ const styles = StyleSheet.create({
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 24,
-    width: '80%',
-    maxWidth: 400,
+    padding: 16,
+    width: '90%',
+    maxWidth: 500,
   },
   modalTitle: {
     fontSize: 18,
@@ -2483,7 +2485,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#2196F3',
     fontWeight: 'bold',
-    marginBottom: 24,
+    marginBottom: 12,
     textAlign: 'center',
   },
   modalLabel: {
@@ -2494,12 +2496,12 @@ const styles = StyleSheet.create({
   paymentOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#ddd',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   paymentOptionSelected: {
     borderColor: '#2196F3',
@@ -2517,7 +2519,7 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 24,
+    marginTop: 16,
   },
   modalButton: {
     flex: 1,

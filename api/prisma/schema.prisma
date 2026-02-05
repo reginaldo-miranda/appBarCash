@@ -496,6 +496,7 @@ enum FormaPagamento {
   dinheiro
   cartao
   pix
+  cashback
 }
 
 enum SaleStatus {

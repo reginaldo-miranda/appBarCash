@@ -1085,7 +1085,7 @@ router.put('/:id/finalize', async (req, res) => {
       )
     );
     const descontoNum = Number(venda.desconto || 0) + descontoPontos;
-    const total = Math.max(0, subtotal - descontoNum);
+    const total = Math.max(0, subtotal + Number(venda.deliveryFee || 0) - descontoNum);
 
     let responsavelNome = venda.responsavelNome || null;
     let funcionarioNome = venda.funcionarioNome || null;
@@ -1368,7 +1368,7 @@ router.get('/', async (req, res) => {
       where,
       include: {
         funcionario: { select: { nome: true } },
-        cliente: { select: { nome: true } },
+        cliente: { select: { nome: true, saldoCashback: true } },
         caixaVendas: true,
       },
       orderBy: { dataVenda: 'desc' },

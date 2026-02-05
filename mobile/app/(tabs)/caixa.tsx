@@ -561,7 +561,7 @@ export default function CaixaScreen() {
                     </TouchableOpacity>
                     </View>
                     <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {['all', 'dinheiro', 'cartao', 'pix'].map((method) => (
+                    {['all', 'dinheiro', 'cartao', 'pix', 'cashback'].map((method) => (
                         <TouchableOpacity
                         key={method}
                         style={[styles.paymentOption, paymentFilterWeb === method && styles.paymentOptionSelected]}

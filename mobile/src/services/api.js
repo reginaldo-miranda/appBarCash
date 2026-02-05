@@ -122,9 +122,11 @@ function resolveApiBaseUrl() {
   } catch {}
 
   if (Platform.OS === 'android') {
-    return `http://10.0.2.2:${DEFAULT_PORT}/api`;
+    // Fallback prioritário para IP da LAN real (físico)
+    return `http://192.168.1.145:${DEFAULT_PORT}/api`;
+    // return `http://10.0.2.2:${DEFAULT_PORT}/api`; // Emulator
   }
-  return '';
+  return `http://192.168.1.145:${DEFAULT_PORT}/api`; // iOS/Outros fallback
 }
 
 // Primeiro: variável de ambiente pública
