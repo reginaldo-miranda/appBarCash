@@ -600,6 +600,30 @@ export default function PaymentSplitModal({
               display: 'flex', 
               flexDirection: 'column' 
             }}>
+                {/* Context Info Header */}
+                <View style={{ padding: 12, backgroundColor: '#f8f9fa', borderBottomWidth: 1, borderColor: '#eee' }}>
+                    {sale && (
+                        <View>
+                             {(sale as any).mesa && (
+                                 <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#4CAF50' }}>
+                                     Mesa {(sale as any).mesa.numero} {(sale as any).mesa.nomeResponsavel ? `- ${(sale as any).mesa.nomeResponsavel}` : ''}
+                                 </Text>
+                             )}
+                             {(sale as any).tipoVenda === 'comanda' && (
+                                 <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#FF9800' }}>
+                                     Comanda {(sale as any).numeroComanda || (sale as any).codigo || ''} {(sale as any).nomeComanda ? `- ${(sale as any).nomeComanda}` : ''}
+                                 </Text>
+                             )}
+                             {/* Se não for mesa nem comanda, ou se tiver cliente vinculado, mostra cliente */}
+                             {sale.cliente && (
+                                 <Text style={{ fontSize: 14, color: '#555', marginTop: 4 }}>
+                                     Cliente: <Text style={{ fontWeight: 'bold' }}>{sale.cliente.nome}</Text>
+                                 </Text>
+                             )}
+                        </View>
+                    )}
+                </View>
+
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', paddingRight: 12, borderBottomWidth: 1, borderColor: '#f0f0f0' }}>
                     <Text style={styles.sectionTitle}>Selecione os itens a pagar:</Text>
                     <TouchableOpacity onPress={() => {

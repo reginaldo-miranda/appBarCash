@@ -1441,7 +1441,7 @@ export default function SaleScreen() {
                    }
 
                    // Se não tem cliente ou falhou fetch ou saldo 0
-                   if (selectedCliente && Number(selectedCliente.saldoCashback || 0) > 0 && totalRemaining > 0) {
+                   if (false && selectedCliente && Number(selectedCliente.saldoCashback || 0) > 0 && totalRemaining > 0) {
                        // Fallback para o valor que já temos se o fetch falhar
                        setCashbackPromptVisible(true);
                    } else {
@@ -1835,6 +1835,9 @@ export default function SaleScreen() {
         }}
       />
 
+
+
+
       <Modal
         visible={modalVisible}
         transparent
@@ -1848,8 +1851,8 @@ export default function SaleScreen() {
             <Text style={styles.modalSubtitle}>Total: R$ {totalItems.toFixed(2)}</Text>
             {totalPaid > 0 && (
               <>
-                <Text style={[styles.modalSubtitle, { color: '#4CAF50', marginTop: -20 }]}>Pago: R$ {totalPaid.toFixed(2)}</Text>
-                <Text style={[styles.modalSubtitle, { color: '#F44336', marginTop: -20 }]}>Falta: R$ {totalRemaining.toFixed(2)}</Text>
+                <Text style={[styles.modalSubtitle, { color: '#4CAF50' }]}>Pago: R$ {totalPaid.toFixed(2)}</Text>
+                <Text style={[styles.modalSubtitle, { color: '#F44336' }]}>Falta: R$ {totalRemaining.toFixed(2)}</Text>
               </>
             )}
 
