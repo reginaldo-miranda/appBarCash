@@ -1024,6 +1024,10 @@ router.put('/:id/finalize', async (req, res) => {
       },
     });
 
+    if (venda) {
+
+    }
+
     if (!venda) {
       return res.status(404).json({ error: 'Venda não encontrada' });
     }
@@ -1272,6 +1276,8 @@ router.put('/:id/finalize', async (req, res) => {
                     }
                 });
                 
+
+                
                 await prisma.sale.update({
                     where: { id: vendaFinalizada.id },
                     data: { cashbackGerado }
@@ -1438,25 +1444,40 @@ router.put('/:id/pay-items', async (req, res) => {
             return res.status(400).json({ error: 'Saldo de cashback insuficiente' });
         }
         
-        // Debitar do cliente
-        await prisma.customer.update({
-            where: { id: cliente.id },
-            data: { saldoCashback: { decrement: valorPagamento } }
+
+
+        // Usar transação para garantir que o saldo só é descontado se o registro no caixa for criado
+        await prisma.$transaction([
+            prisma.customer.update({
+                where: { id: cliente.id },
+                data: { saldoCashback: { decrement: valorPagamento } }
+            }),
+            prisma.caixaVenda.create({
+                data: {
+                    caixaId: caixaAberto.id,
+                    vendaId: venda.id,
+                    valor: valorPagamento,
+                    formaPagamento: 'cashback',
+                    dataVenda: new Date(),
+                    itensPagos: items || [],
+                    observacoes: 'Pagamento Parcial (Cashback)'
+                }
+            })
+        ]);
+    } else {
+        // Pagamento normal (Dinheiro, Cartão, PIX)
+        await prisma.caixaVenda.create({
+          data: {
+            caixaId: caixaAberto.id,
+            vendaId: venda.id,
+            valor: valorPagamento,
+            formaPagamento: ['dinheiro', 'cartao', 'pix', 'cashback'].includes(formaPagamento) ? formaPagamento : 'dinheiro',
+            dataVenda: new Date(),
+            itensPagos: items || [], // Grava o JSON na tabela
+            observacoes: 'Pagamento Parcial / Dividido'
+          }
         });
     }
-
-    // Salvar metadados dos itens pagos na tabela CaixaVenda
-    await prisma.caixaVenda.create({
-      data: {
-        caixaId: caixaAberto.id,
-        vendaId: venda.id,
-        valor: valorPagamento,
-        formaPagamento: ['dinheiro', 'cartao', 'pix', 'cashback'].includes(formaPagamento) ? formaPagamento : 'dinheiro',
-        dataVenda: new Date(),
-        itensPagos: items || [], // Grava o JSON na tabela
-        observacoes: 'Pagamento Parcial / Dividido'
-      }
-    });
     console.log('[API] Pagamento Parcial registrado. Acionando sync para id:', venda.id);
 
     // Atualizar totais do Caixa

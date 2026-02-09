@@ -577,7 +577,7 @@ export const saleService = {
         : { formaPagamento: payload?.formaPagamento || 'dinheiro' };
     return api.put(`/sale/${id}/finalize`, body);
   },
-  payItems: (id, payload) => api.put(`/sale/${id}/pay-items`, payload),
+  payItems: (id, payload) => api.put(`/sale/${id}/pay-items`, payload, { raxConfig: { retry: 0 } }),
   cancel: (id) => api.put(`/sale/${id}/cancel`),
   open: () => api.get('/sale/open'),
   openMin: () => api.get('/sale/open-min'),
