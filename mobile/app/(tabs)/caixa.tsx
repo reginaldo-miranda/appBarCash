@@ -539,40 +539,40 @@ export default function CaixaScreen() {
                 </View>
 
                 {Platform.OS === 'web' && (
-                <View style={styles.filterBar}>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    <TouchableOpacity
-                        style={[styles.paymentOption, markFilter === 'all' && styles.paymentOptionSelected]}
-                        onPress={() => setMarkFilter('all')}
-                    >
-                        <Text style={[styles.paymentOptionText, markFilter === 'all' && styles.paymentOptionTextSelected]}>Todos</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.paymentOption, markFilter === 'marked' && styles.paymentOptionSelected]}
-                        onPress={() => setMarkFilter('marked')}
-                    >
-                        <Text style={[styles.paymentOptionText, markFilter === 'marked' && styles.paymentOptionTextSelected]}>Marcados</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        style={[styles.paymentOption, markFilter === 'unmarked' && styles.paymentOptionSelected]}
-                        onPress={() => setMarkFilter('unmarked')}
-                    >
-                        <Text style={[styles.paymentOptionText, markFilter === 'unmarked' && styles.paymentOptionTextSelected]}>Não marcados</Text>
-                    </TouchableOpacity>
-                    </View>
-                    <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                    {['all', 'dinheiro', 'cartao', 'pix', 'cashback'].map((method) => (
+                <View style={styles.webFilterContainer}>
+                    <View style={styles.webFilterGroup}>
                         <TouchableOpacity
-                        key={method}
-                        style={[styles.paymentOption, paymentFilterWeb === method && styles.paymentOptionSelected]}
-                        onPress={() => setPaymentFilterWeb(method as any)}
+                            style={[styles.miniFilterButton, markFilter === 'all' && styles.miniFilterButtonSelected]}
+                            onPress={() => setMarkFilter('all')}
                         >
-                        <Text style={[styles.paymentOptionText, paymentFilterWeb === method && styles.paymentOptionTextSelected]}
-                        >
-                            {method === 'all' ? 'Todas' : method.charAt(0).toUpperCase() + method.slice(1)}
-                        </Text>
+                            <Text style={[styles.miniFilterText, markFilter === 'all' && styles.miniFilterTextSelected]}>Todos</Text>
                         </TouchableOpacity>
-                    ))}
+                        <TouchableOpacity
+                            style={[styles.miniFilterButton, markFilter === 'marked' && styles.miniFilterButtonSelected]}
+                            onPress={() => setMarkFilter('marked')}
+                        >
+                            <Text style={[styles.miniFilterText, markFilter === 'marked' && styles.miniFilterTextSelected]}>Marcados</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.miniFilterButton, markFilter === 'unmarked' && styles.miniFilterButtonSelected]}
+                            onPress={() => setMarkFilter('unmarked')}
+                        >
+                            <Text style={[styles.miniFilterText, markFilter === 'unmarked' && styles.miniFilterTextSelected]}>Não marcados</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.webFilterGroup}>
+                        {['all', 'dinheiro', 'cartao', 'pix', 'cashback'].map((method) => (
+                            <TouchableOpacity
+                                key={method}
+                                style={[styles.miniFilterButton, paymentFilterWeb === method && styles.miniFilterButtonSelected]}
+                                onPress={() => setPaymentFilterWeb(method as any)}
+                            >
+                                <Text style={[styles.miniFilterText, paymentFilterWeb === method && styles.miniFilterTextSelected]}>
+                                    {method === 'all' ? 'Todas' : method.charAt(0).toUpperCase() + method.slice(1)}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
                     </View>
                 </View>
                 )}
@@ -716,288 +716,377 @@ export default function CaixaScreen() {
   );
 }
 
+
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F1F5F9', // Fundo levemente mais escuro para contraste das linhas brancas
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F1F5F9',
   },
   loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
+    marginTop: 12,
+    fontSize: 13,
+    color: '#64748B',
+    fontWeight: '500',
   },
+  
+  // Header Compacto
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 12,
-    backgroundColor: 'white',
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === 'android' ? 36 : 12,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    borderBottomColor: '#E2E8F0',
+    elevation: 2,
+    zIndex: 10,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+    letterSpacing: -0.5,
   },
   refreshButton: {
     padding: 6,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
+
   content: {
     flex: 1,
-    padding: 12,
+    paddingHorizontal: 12, // Padding lateral reduzido
+    paddingTop: 8,
   },
+
+  // Filtros Compactos
+  viewFilterContainer: {
+     flexDirection: 'row',
+     backgroundColor: '#E2E8F0',
+     padding: 2,
+     borderRadius: 8,
+     marginHorizontal: 12,
+     marginTop: 8,
+     marginBottom: 4,
+     height: 32, // Altura fixa reduzida
+  },
+  viewFilterOption: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      borderRadius: 6,
+  },
+  viewFilterOptionSelected: {
+      backgroundColor: '#fff',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 1,
+      elevation: 1,
+  },
+  viewFilterText: {
+      fontSize: 12, // Fonte menor
+      fontWeight: '600',
+      color: '#64748B',
+  },
+  viewFilterTextSelected: {
+      color: '#0F172A', // Texto preto suave
+      fontWeight: '700',
+  },
+
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 6,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+    marginBottom: 8,
+    marginTop: 8,
+    paddingHorizontal: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
+  
   emptyContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 24,
+    paddingVertical: 30,
+    marginTop: 8,
   },
   emptyText: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 12,
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: 8,
+  },
+
+  // Lista / Linhas Ultra Compactas
+  listGrid: {
+    flexDirection: 'column', // Mudança para coluna (lista vertical)
+    paddingBottom: 12, // Reduzido de 24
   },
   vendaCard: {
-    backgroundColor: 'white',
-    borderRadius: 6,
-    padding: 6,
-    marginBottom: 6,
-    width: Platform.OS === 'web' ? '49%' : '100%',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 3,
-  },
-  listGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    backgroundColor: '#fff',
+    borderRadius: 6, // Bordas ainda menos arredondadas
+    paddingVertical: 4, // Reduzido de 8 para 4 (metade)
+    paddingHorizontal: 8, // Reduzido de 12 para 8
+    marginBottom: 2, // Margem mínima entre itens (reduzido de 4)
+    width: '100%', // Largura total
+    borderLeftWidth: 3, // Reduzido de 4
+    borderLeftColor: '#10B981', // Verde
+    borderRightWidth: 1,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row', // Layout horizontal
+    alignItems: 'center',
     justifyContent: 'space-between',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.02, // Sombra ainda mais sutil
+    shadowRadius: 1,
+    elevation: 1,
   },
+  // Reorganização interna do card para linha única
   rowLine: {
+    flex: 1, // Ocupa o espaço disponível
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 4,
   },
+  vendaTitle: {
+    fontSize: 13, // Fonte levemente reduzida (era 14)
+    fontWeight: '700',
+    color: '#1E293B',
+    minWidth: 70, // Largura mínima reduzida
+  },
+  // Container para informações secundárias na mesma linha ou logo abaixo
+  vendaInfoContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 8, // Reduzido de 12
+    marginRight: 8, // Reduzido de 12
+    gap: 4, // Reduzido de 8
+    overflow: 'hidden',
+  },
+  vendaInfoCompact: {
+    fontSize: 10, // Fonte reduzida (era 11)
+    color: '#64748B',
+    backgroundColor: '#F1F5F9',
+    paddingHorizontal: 4, // Reduzido de 6
+    paddingVertical: 1, // Reduzido de 2
+    borderRadius: 3, // Reduzido de 4
+  },
+  
   rowRight: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  rowAction: {
-    marginLeft: 4,
-  },
-  vendaInfoCompact: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
-  },
-  vendaHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  vendaTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
+    gap: 6, // Reduzido de 8
   },
   vendaTotal: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4CAF50',
+    fontSize: 13, // Reduzido de 14
+    fontWeight: '700',
+    color: '#059669', // Verde mais escuro para contraste em texto pequeno
+    minWidth: 60, // Reduzido de 70
+    textAlign: 'right',
   },
-  vendaInfo: {
-    fontSize: 12,
-    color: '#666',
-    marginBottom: 4,
+  rowAction: {
+    padding: 2, // Reduzido de 4
   },
-  vendaActions: {
-    marginTop: 8,
-    alignItems: 'flex-end',
-  },
-  finalizarButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#4CAF50',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-  finalizarButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    marginLeft: 4,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 24,
-    width: '90%',
-    maxWidth: 400,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginBottom: 16,
-    color: '#333',
-  },
-  modalInfo: {
-    backgroundColor: '#f5f5f5',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 16,
-  },
-  modalInfoText: {
-    fontSize: 14,
-    color: '#333',
-    textAlign: 'center',
-  },
-  paymentLabel: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333',
-  },
-  paymentOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  paymentOption: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    marginHorizontal: 4,
-    alignItems: 'center',
-  },
-  paymentOptionSelected: {
-    backgroundColor: '#2196F3',
-    borderColor: '#2196F3',
-  },
-  paymentOptionText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  paymentOptionTextSelected: {
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  modalActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 6,
-    marginRight: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 14,
-    color: '#666',
-  },
-  confirmButton: {
-    flex: 1,
-    padding: 10,
-    backgroundColor: '#4CAF50',
-    borderRadius: 6,
-    marginLeft: 8,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    fontSize: 14,
-    color: 'white',
-    fontWeight: 'bold',
-  },
+
+  // Filtros e Resumo (Vendas Registradas)
   filterBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'white',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    backgroundColor: '#fff',
+    padding: 6, // Reduzido de 8
     borderRadius: 8,
+    marginBottom: 6, // Reduzido de 8
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginBottom: 6,
+    borderColor: '#E2E8F0',
   },
   dateDisplay: {
-    fontSize: 12,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#334155',
   },
   summaryBar: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
     flexWrap: 'wrap',
-    backgroundColor: 'white',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-    marginBottom: 10,
+    gap: 4, // Reduzido de 6
+    marginBottom: 8, // Reduzido de 12
   },
   summaryItem: {
+    fontSize: 10, // Reduzido de 11
+    fontWeight: '600',
+    color: '#334155',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    paddingHorizontal: 6, // Reduzido de 8
+    paddingVertical: 2, // Reduzido de 4
+    borderRadius: 10, // Reduzido de 12
+  },
+  
+  // Modal de Finalização (Mantido estilo, mas ajustado levemente)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    width: Platform.OS === 'web' ? '380px' : '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1E293B',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  modalInfo: {
+    backgroundColor: '#F8FAFC',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  modalInfoText: {
+    fontSize: 15,
+    color: '#334155',
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  paymentLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
+    marginBottom: 8,
+  },
+  paymentOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+    marginBottom: 20,
+  },
+  paymentOption: {
+    flex: 1,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  paymentOptionSelected: {
+    borderColor: '#2196F3',
+    backgroundColor: '#F0F9FF',
+    borderWidth: 2,
+  },
+  paymentOptionText: {
     fontSize: 12,
-    color: '#333',
-    marginRight: 10,
-    marginVertical: 2,
+    fontWeight: '600',
+    color: '#64748B',
   },
-  viewFilterContainer: {
-     flexDirection: 'row',
-     justifyContent: 'center',
-     marginVertical: 10,
-     gap: 10,
-     flexWrap: 'wrap',
+  paymentOptionTextSelected: {
+    color: '#0369A1',
   },
-  viewFilterOption: {
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 20,
-      backgroundColor: '#f0f0f0',
-      borderWidth: 1,
-      borderColor: '#e0e0e0',
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  viewFilterOptionSelected: {
-      backgroundColor: '#2196F3',
-      borderColor: '#2196F3',
+  cancelButton: {
+    flex: 1,
+    paddingVertical: 12,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  viewFilterText: {
-      fontSize: 14,
-      color: '#333',
-      fontWeight: '500',
+  cancelButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#64748B',
   },
-  viewFilterTextSelected: {
-      color: 'white',
-      fontWeight: 'bold',
+  confirmButton: {
+    flex: 1,
+    paddingVertical: 12,
+    backgroundColor: '#10B981',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  confirmButtonText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  
+  // Novos estilos compactos para filtro web
+  webFilterContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8, // Reduzido de 12
+    marginBottom: 4, // Reduzido de 8
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  webFilterGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 2, // Reduzido de 4
+    alignItems: 'center',
+    padding: 2,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 6, // Reduzido de 8
+  },
+  miniFilterButton: {
+    paddingHorizontal: 6, // Reduzido de 8
+    paddingVertical: 3, // Reduzido de 5
+    borderRadius: 4, // Reduzido de 6
+    borderWidth: 1,
+    borderColor: 'transparent',
+    minWidth: 0,
+  },
+  miniFilterButtonSelected: {
+    backgroundColor: '#fff',
+    borderColor: '#CBD5E1',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 1, // Reduzido de 2
+    elevation: 1,
+  },
+  miniFilterText: {
+    fontSize: 10, // Reduzido de 11
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  miniFilterTextSelected: {
+    color: '#0F172A',
+    fontWeight: '700',
   },
 });
-  const saleKey = (v: Sale) => String((v as any)?._id || (v as any)?.id || '');
+
+const saleKey = (v: Sale) => String((v as any)?._id || (v as any)?.id || '');
+
+
