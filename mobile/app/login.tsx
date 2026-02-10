@@ -11,9 +11,9 @@ import {
   Platform,
   NativeModules,
   Modal,
-  ToastAndroid,
+  Dimensions,
+  Image,
 } from "react-native";
-// import removido: Ionicons não é necessário, usamos SafeIcon
 import { router } from "expo-router";
 import { useAuth } from "../src/contexts/AuthContext";
 import { SafeIcon } from "../components/SafeIcon";
@@ -27,8 +27,18 @@ import {
 import { STORAGE_KEYS } from "../src/services/storage";
 import Constants from "expo-constants";
 
+// Fallback visual para fundo
+const BackgroundGradient = ({ children, style }: any) => {
+  return (
+    <View style={[{ flex: 1, backgroundColor: '#F0F2F5' }, style]}>
+       {children}
+    </View>
+  );
+};
+
+
 export default function LoginScreen() {
- // const [email, setEmail] = useState("admin@barapp.com");
+  // const [email, setEmail] = useState("admin@barapp.com");
   const [email, setEmail] = useState("admin@admin.com");
   const [password, setPassword] = useState("123456");
   const [showPassword, setShowPassword] = useState(false);
@@ -635,540 +645,515 @@ export default function LoginScreen() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
-      <View style={styles.content}>
-        <View style={styles.topRightSwitcher}>
-          <TouchableOpacity
-            style={styles.topRightButton}
-            onPress={() => setShowDbModal(true)}
-          >
-            <SafeIcon name="link" size={16} color="#0B67C2" fallbackText="🔗" />
-            <Text style={styles.topRightText}>
-              {activeDbLabel ? activeDbLabel : "Selecionar Base"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <SafeIcon
-              name="restaurant"
-              size={48}
-              color="#2196F3"
-              fallbackText="🍽"
-            />
-          </View>
-          <Text style={styles.title}>BarApp</Text>
-          <Text style={styles.subtitle}>Sistema de Vendas</Text>
-        </View>
-
-        {activeDbLabel ? (
-          <View style={styles.activeDbBadge}>
-            <Text style={styles.activeDbBadgeText}>{activeDbLabel}</Text>
-          </View>
-        ) : null}
-
-        <View style={styles.form}>
-          {/* Campos de Login */}
-          <View style={styles.inputContainer}>
-            <SafeIcon
-              name="mail"
-              size={18}
-              color="#666"
-              fallbackText="@"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              ref={emailRef}
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="next"
-              blurOnSubmit={false}
-              onSubmitEditing={() => passwordRef.current?.focus()}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === "Enter") {
-                  passwordRef.current?.focus();
-                }
-              }}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <SafeIcon
-              name="link-closed"
-              size={18}
-              color="#666"
-              fallbackText="🔒"
-              style={styles.inputIcon}
-            />
-            <TextInput
-              ref={passwordRef}
-              style={styles.input}
-              placeholder="Senha"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-              autoCorrect={false}
-              returnKeyType="go"
-              onSubmitEditing={handleLogin}
-              onKeyPress={({ nativeEvent }) => {
-                if (nativeEvent.key === "Enter") {
-                  handleLogin();
-                }
-              }}
-            />
+    <BackgroundGradient style={styles.container}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View style={styles.centerContent}>
+          
+          {/* Top Switcher (Posicionado no Canto mas discreto) */}
+          <View style={styles.topRightSwitcher}>
             <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
+              style={styles.connectionBadge}
+              onPress={() => setShowDbModal(true)}
             >
-              <SafeIcon
-                name={showPassword ? "eye-off" : "eye"}
-                size={18}
-                color="#666"
-                fallbackText={showPassword ? "🙈" : "👁"}
-              />
+              <View style={[styles.connectionDot, { backgroundColor: baseStatus === 'ok' ? '#4CAF50' : '#FF9800' }]} />
+              <Text style={styles.connectionText}>
+                {activeDbLabel ? 'Conectado' : "Conexão"}
+              </Text>
+              <SafeIcon name="chevron-down" size={14} color="#666" fallbackText="▼" />
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity
-            style={[
-              styles.loginButton,
-              (loginLoading || baseStatus !== "ok") &&
-                styles.loginButtonDisabled,
-            ]}
-            onPress={handleLogin}
-            disabled={loginLoading || baseStatus !== "ok"}
-          >
-            {loginLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.loginButtonText}>Entrar</Text>
-            )}
-          </TouchableOpacity>
-
-          {showError && (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{errorMessage}</Text>
+          {/* Card Principal de Login */}
+          <View style={styles.loginCard}>
+            
+            {/* Logo Section */}
+            <View style={styles.logoSection}>
+              <View style={styles.logoCircle}>
+                <SafeIcon
+                  name="restaurant"
+                  size={42}
+                  color="#2196F3"
+                  fallbackText="🍽"
+                />
+              </View>
+              <Text style={styles.title}>BarApp</Text>
+              <Text style={styles.subtitle}>Gestão Inteligente</Text>
             </View>
-          )}
+
+            {/* Form Section */}
+            <View style={styles.formSection}>
+              <View style={styles.inputWrapper}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <View style={styles.modernInputContainer}>
+                  <SafeIcon name="mail" size={20} color="#909090" fallbackText="@" style={styles.inputIcon} />
+                  <TextInput
+                    ref={emailRef}
+                    style={styles.modernInput}
+                    placeholder="ex: admin@admin.com"
+                    placeholderTextColor="#A0A0A0"
+                    value={email}
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                    blurOnSubmit={false}
+                    onSubmitEditing={() => passwordRef.current?.focus()}
+                  />
+                </View>
+              </View>
+
+              <View style={styles.inputWrapper}>
+                <Text style={styles.inputLabel}>Senha</Text>
+                <View style={styles.modernInputContainer}>
+                  <SafeIcon name="lock-closed" size={20} color="#909090" fallbackText="🔒" style={styles.inputIcon} />
+                  <TextInput
+                    ref={passwordRef}
+                    style={styles.modernInput}
+                    placeholder="Digite sua senha"
+                    placeholderTextColor="#A0A0A0"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    returnKeyType="go"
+                    onSubmitEditing={handleLogin}
+                  />
+                  <TouchableOpacity
+                    style={styles.eyeBtn}
+                    onPress={() => setShowPassword(!showPassword)}
+                  >
+                    <SafeIcon
+                      name={showPassword ? "eye-off" : "eye"}
+                      size={20}
+                      color="#909090"
+                      fallbackText={showPassword ? "🙈" : "👁"}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {showError && (
+                <View style={styles.errorBanner}>
+                  <SafeIcon name="alert-circle" size={16} color="#D32F2F" fallbackText="!" />
+                  <Text style={styles.errorBannerText}>{errorMessage}</Text>
+                </View>
+              )}
+
+              <TouchableOpacity
+                style={[
+                  styles.ctaButton,
+                  (loginLoading || baseStatus !== "ok") && styles.ctaButtonDisabled,
+                ]}
+                onPress={handleLogin}
+                disabled={loginLoading || baseStatus !== "ok"}
+                activeOpacity={0.8}
+              >
+                {loginLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.ctaButtonText}>Acessar Sistema</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.debugLink}
+                onPress={async () => {
+                   Alert.alert(
+                    "Confirmação", 
+                    "Deseja limpar todos os dados em cache?", 
+                    [
+                        { text: "Cancelar", style: "cancel" },
+                        { 
+                            text: "Limpar", 
+                            onPress: async () => {
+                                await clearAllStorage();
+                                Alert.alert("Sucesso", "Cache limpo!");
+                            } 
+                        }
+                    ]
+                   )
+                }}
+              >
+                <Text style={styles.debugLinkText}>Problemas com login? Limpar cache</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          
+          <Text style={styles.footerVersion}>Versão 2.1.0 • BarApp Inc.</Text>
+
         </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>
-            Digite qualquer email e senha para testar
-          </Text>
-          <TouchableOpacity
-            style={styles.debugButton}
-            onPress={async () => {
-              await clearAllStorage();
-              Alert.alert("Debug", "Cache limpo com sucesso!");
-            }}
-          >
-            <Text style={styles.debugButtonText}>Limpar Cache (Debug)</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Modal de seleção de base de dados */}
+        {/* Modal de seleção de base de dados - Estilo Mantido mas limpo */}
         <Modal
           visible={showDbModal}
-          animationType="slide"
+          animationType="fade"
           transparent
           onRequestClose={() => setShowDbModal(false)}
         >
-          <View
-            style={{
-              flex: 1,
-              backgroundColor: "rgba(0,0,0,0.4)",
-              justifyContent: "center",
-              padding: 24,
-            }}
-          >
-            <View
-              style={{ backgroundColor: "#fff", borderRadius: 12, padding: 16 }}
-            >
-              <Text
-                style={{ fontSize: 18, fontWeight: "bold", marginBottom: 12 }}
-              >
-                Selecionar base de dados
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Configuração de Conexão</Text>
+                <TouchableOpacity onPress={() => setShowDbModal(false)}>
+                  <SafeIcon name="close" size={24} color="#666" fallbackText="X" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.modalDesc}>
+                Selecione onde o servidor da API está sendo executado.
               </Text>
 
-              <View style={styles.segmentedRow}>
+              <View style={styles.selectorRow}>
                 <TouchableOpacity
-                  style={[
-                    styles.segmentButton,
-                    dbOption === "lan" && styles.segmentButtonActive,
-                  ]}
+                  style={[styles.selOption, dbOption === "lan" && styles.selOptionActive]}
                   onPress={() => handleQuickSelect("lan")}
                 >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      dbOption === "lan" && styles.segmentTextActive,
-                    ]}
-                  >
-                    Local (LAN)
-                  </Text>
+                  <SafeIcon name="wifi" size={24} color={dbOption === "lan" ? "#fff" : "#666"} fallbackText="Lan" />
+                  <Text style={[styles.selText, dbOption === "lan" && styles.selTextActive]}>Local (LAN)</Text>
                 </TouchableOpacity>
+                
                 <TouchableOpacity
-                  style={[
-                    styles.segmentButton,
-                    dbOption === "railway" && styles.segmentButtonActive,
-                  ]}
+                  style={[styles.selOption, dbOption === "railway" && styles.selOptionActive]}
                   onPress={() => handleQuickSelect("railway")}
                 >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      dbOption === "railway" && styles.segmentTextActive,
-                    ]}
-                  >
-                    API Pública
-                  </Text>
+                   <SafeIcon name="cloud" size={24} color={dbOption === "railway" ? "#fff" : "#666"} fallbackText="Cloud" />
+                   <Text style={[styles.selText, dbOption === "railway" && styles.selTextActive]}>Nuvem</Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
-                  style={[
-                    styles.segmentButton,
-                    dbOption === "custom" && styles.segmentButtonActive,
-                  ]}
+                  style={[styles.selOption, dbOption === "custom" && styles.selOptionActive]}
                   onPress={() => handleQuickSelect("custom")}
                 >
-                  <Text
-                    style={[
-                      styles.segmentText,
-                      dbOption === "custom" && styles.segmentTextActive,
-                    ]}
-                  >
-                    URL Personalizada
-                  </Text>
+                   <SafeIcon name="code-slash" size={24} color={dbOption === "custom" ? "#fff" : "#666"} fallbackText="Custom" />
+                   <Text style={[styles.selText, dbOption === "custom" && styles.selTextActive]}>Custom</Text>
                 </TouchableOpacity>
               </View>
 
               {(dbOption === "railway" || dbOption === "custom") && (
-                <View style={styles.inputContainer}>
-                  <SafeIcon
-                    name="link"
-                    size={20}
-                    color="#666"
-                    fallbackText="🔗"
-                    style={styles.inputIcon}
-                  />
+                <View style={styles.modalInputBox}>
+                  <Text style={styles.modalLabel}>URL da API</Text>
                   <TextInput
-                    style={styles.input}
-                    placeholder={
-                      dbOption === "railway"
-                        ? "http://192.168.x.x:4000/api"
-                        : "http://192.168.x.x:4000/api"
-                    }
+                    style={styles.modalInput}
+                    placeholder="http://..."
                     value={apiUrl}
                     onChangeText={setApiUrl}
                     autoCapitalize="none"
                     autoCorrect={false}
                     keyboardType="url"
-                    returnKeyType="done"
                   />
                 </View>
               )}
 
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  marginTop: 8,
-                }}
-              >
+              <View style={styles.modalActions}>
                 <TouchableOpacity
-                  style={[
-                    styles.saveTestButton,
-                    { flex: 1, marginRight: 8, backgroundColor: "#1976D2" },
-                  ]}
+                  style={[styles.actionBtn, styles.actionBtnSec]}
                   onPress={handleSelectLanAuto}
+                  disabled={saveLoading}
                 >
-                  {saveLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.saveTestButtonText}>
-                      Detectar LAN e Testar
-                    </Text>
-                  )}
+                   {saveLoading ? <ActivityIndicator color="#0B67C2" /> : <Text style={styles.actionBtnSecText}>Auto Detectar</Text>}
                 </TouchableOpacity>
+                
                 <TouchableOpacity
-                  style={[styles.saveTestButton, { flex: 1, marginLeft: 8 }]}
+                  style={[styles.actionBtn, styles.actionBtnPri]}
                   onPress={handleSaveAndTest}
                   disabled={saveLoading}
                 >
-                  {saveLoading ? (
-                    <ActivityIndicator color="#fff" />
-                  ) : (
-                    <Text style={styles.saveTestButtonText}>
-                      Salvar e Testar
-                    </Text>
-                  )}
+                  {saveLoading ? <ActivityIndicator color="#fff" /> : <Text style={styles.actionBtnPriText}>Salvar e Conectar</Text>}
                 </TouchableOpacity>
               </View>
-
-              {activeDbLabel ? (
-                <Text
-                  style={[styles.statusText, styles.statusOk, { marginTop: 8 }]}
-                >
-                  Base ativa: {activeDbLabel}
-                </Text>
-              ) : null}
-
-              <TouchableOpacity
-                style={[
-                  styles.saveTestButton,
-                  { marginTop: 12, backgroundColor: "#9E9E9E" },
-                ]}
-                onPress={() => setShowDbModal(false)}
-              >
-                <Text style={styles.saveTestButtonText}>Fechar</Text>
-              </TouchableOpacity>
+              
+              <Text style={styles.modalStatus}>{baseMessage}</Text>
             </View>
           </View>
         </Modal>
-      </View>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </BackgroundGradient>
   );
 }
+
+const { width } = Dimensions.get('window');
+const isTablet = width > 768;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
-  content: {
+  centerContent: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 32,
-  },
-  header: {
     alignItems: "center",
-    marginBottom: 48,
+    padding: 24,
   },
-  logoContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+  topRightSwitcher: {
+    position: "absolute",
+    top: Platform.OS === 'ios' ? 60 : 40,
+    right: 24,
+    zIndex: 10,
+  },
+  connectionBadge: {
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-    elevation: 4,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 4,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#2196F3",
-    marginBottom: 8,
+  connectionDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 6,
   },
-  subtitle: {
-    fontSize: 16,
-    color: "#666",
+  connectionText: {
+    fontSize: 12,
+    color: "#444",
+    fontWeight: "600",
+    marginRight: 4,
   },
-  form: {
+  loginCard: {
+    width: "100%",
+    maxWidth: 400,
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 32,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.1,
+    shadowRadius: 20,
+    alignItems: "center",
+  },
+  logoSection: {
+    alignItems: "center",
     marginBottom: 32,
   },
-  // Estilos adicionados para o seletor de base e status
-  selectorContainer: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  selectorLabel: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 12,
-  },
-  segmentedRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  segmentButton: {
-    flex: 1,
-    backgroundColor: "#eee",
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    alignItems: "center",
-    marginRight: 8,
-  },
-  segmentButtonActive: {
-    backgroundColor: "#2196F3",
-  },
-  segmentText: {
-    color: "#333",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  segmentTextActive: {
-    color: "#fff",
-  },
-  saveTestButton: {
-    backgroundColor: "#4CAF50",
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-    marginTop: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  saveTestButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  statusText: {
-    fontSize: 13,
-    marginTop: 8,
-    color: "#666",
-  },
-  statusOk: {
-    color: "#2e7d32",
-  },
-  statusError: {
-    color: "#d32f2f",
-  },
-  // Badge para exibir base ativa com visual mais limpo
-  activeDbBadge: {
-    alignSelf: "flex-start",
+  logoCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     backgroundColor: "#E3F2FD",
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    marginTop: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
   },
-  activeDbBadgeText: {
-    color: "#0B67C2",
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#1565C0",
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#64748B",
+    marginTop: 4,
+  },
+  formSection: {
+    width: "100%",
+  },
+  inputWrapper: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: "#334155",
     fontWeight: "600",
+    marginBottom: 8,
+    marginLeft: 4,
   },
-  inputContainer: {
+  modernInputContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
+    backgroundColor: "#F1F5F9",
     borderRadius: 12,
-    marginBottom: 16,
     paddingHorizontal: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    height: 56,
+    borderWidth: 1,
+    borderColor: "transparent",
   },
   inputIcon: {
     marginRight: 12,
   },
-  input: {
+  modernInput: {
     flex: 1,
-    paddingVertical: 16,
     fontSize: 16,
-    color: "#333",
+    color: "#1E293B",
+    height: "100%",
   },
-  eyeIcon: {
-    padding: 4,
+  eyeBtn: {
+    padding: 8,
   },
-  loginButton: {
+  ctaButton: {
     backgroundColor: "#2196F3",
-    borderRadius: 12,
-    paddingVertical: 16,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: "center",
     alignItems: "center",
-    marginTop: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    marginTop: 12,
+    elevation: 4,
+    shadowColor: "#2196F3",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
-  loginButtonDisabled: {
-    backgroundColor: "#ccc",
+  ctaButtonDisabled: {
+    backgroundColor: "#94A3B8",
+    shadowOpacity: 0,
+    elevation: 0,
   },
-  loginButtonText: {
+  ctaButtonText: {
     color: "#fff",
     fontSize: 18,
     fontWeight: "bold",
   },
-  footer: {
-    alignItems: "center",
-  },
-  footerText: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
+  errorBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FEF2F2',
+    padding: 12,
+    borderRadius: 8,
     marginBottom: 16,
-  },
-  debugButton: {
-    backgroundColor: "#ff6b6b",
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  debugButtonText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  topRightSwitcher: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 10,
-    alignItems: "flex-end",
-  },
-  topRightButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#E3F2FD",
-    borderRadius: 999,
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-  },
-  topRightText: {
-    color: "#0B67C2",
-    fontSize: 12,
-    fontWeight: "600",
-    marginLeft: 6,
-  },
-  errorContainer: {
-    backgroundColor: "#FFEBEE",
-    padding: 10,
-    borderRadius: 8,
-    marginTop: 10,
     borderWidth: 1,
-    borderColor: "#FFCDD2",
+    borderColor: '#FCA5A5',
+  },
+  errorBannerText: {
+    color: '#B91C1C',
+    fontSize: 13,
+    marginLeft: 8,
+    flex: 1,
+  },
+  debugLink: {
+    marginTop: 24,
     alignItems: "center",
   },
-  errorText: {
-    color: "#D32F2F",
+  debugLinkText: {
+    color: "#94A3B8",
+    fontSize: 12,
+  },
+  footerVersion: {
+    marginTop: 32,
+    color: "#CBD5E1",
+    fontSize: 12,
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    width: "100%",
+    maxWidth: 380,
+    borderRadius: 20,
+    padding: 24,
+    elevation: 10,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1E293B",
+  },
+  modalDesc: {
     fontSize: 14,
-    fontWeight: "500",
+    color: "#64748B",
+    marginBottom: 20,
+  },
+  selectorRow: {
+    flexDirection: 'row',
+    marginBottom: 24,
+    gap: 12,
+  },
+  selOption: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  selOptionActive: {
+    backgroundColor: '#2196F3',
+    borderColor: '#2196F3',
+  },
+  selText: {
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 8,
+    color: '#64748B',
+  },
+  selTextActive: {
+    color: '#fff',
+  },
+  modalInputBox: {
+    marginBottom: 20,
+  },
+  modalLabel: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: '#64748B',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  modalInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 14,
+    color: '#333',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionBtnPri: {
+    backgroundColor: '#2196F3',
+  },
+  actionBtnPriText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  actionBtnSec: {
+    backgroundColor: '#E3F2FD',
+  },
+  actionBtnSecText: {
+    color: '#0B67C2',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  modalStatus: {
+    marginTop: 16,
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
   },
 });
 

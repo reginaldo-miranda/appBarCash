@@ -9,6 +9,8 @@ import {
   RefreshControl,
   BackHandler,
   Platform,
+  Dimensions,
+  StatusBar,
 } from 'react-native';
 import { router } from 'expo-router';
 
@@ -18,6 +20,15 @@ import ScreenIdentifier from '../../src/components/ScreenIdentifier';
 import { events } from '../../src/utils/eventBus'
 import { SafeIcon } from '../../components/SafeIcon';
 import WebDropdownMenu from '../../src/components/WebDropdownMenu';
+
+// Header Gradient Fallback
+const HeaderBackground = ({ children, style }: any) => {
+  return (
+    <View style={[{ backgroundColor: '#2196F3' }, style]}>
+       {children}
+    </View>
+  );
+};
 
 export default function HomeScreen() {
   const authContext = useAuth() as any;
@@ -47,19 +58,6 @@ export default function HomeScreen() {
       const todaySales = (salesResponse?.data || []).filter(
         (sale: any) =>
           new Date(sale.createdAt).toDateString() === today
-      );
-
-      // Separar por tipo para estatísticas específicas
-      const todayVendasBalcao = todaySales.filter((sale: any) => 
-        sale.tipoVenda === 'balcao' && sale.status === 'finalizada'
-      );
-      
-      const todayVendasMesa = todaySales.filter((sale: any) => 
-        sale.tipoVenda === 'mesa' && sale.status === 'finalizada'
-      );
-      
-      const todayComandas = todaySales.filter((sale: any) => 
-        sale.tipoVenda === 'comanda'
       );
 
       // Contar mesas ocupadas
@@ -171,6 +169,7 @@ export default function HomeScreen() {
       subtitle: 'Venda direta no balcão',
       icon: 'storefront',
       color: '#4CAF50',
+      gradient: ['#66BB6A', '#43A047'],
       onPress: () => router.push('/sale?type=balcao'),
     },
     {
@@ -178,6 +177,7 @@ export default function HomeScreen() {
       subtitle: 'Abrir e fechar mesas',
       icon: 'restaurant',
       color: '#2196F3',
+      gradient: ['#42A5F5', '#1E88E5'],
       onPress: () => router.push('/(tabs)/mesas'),
     },
     {
@@ -185,272 +185,329 @@ export default function HomeScreen() {
       subtitle: 'Comandas nomeadas',
       icon: 'receipt',
       color: '#FF9800',
+      gradient: ['#FFA726', '#FB8C00'],
       onPress: () => router.push('/(tabs)/comandas'),
     },
     {
       title: 'Modo Tablet',
-      subtitle: 'Visualização para cozinha e bar',
+      subtitle: 'Cozinha e Bar',
       icon: 'tablet-portrait',
       color: '#E91E63',
+      gradient: ['#EC407A', '#D81B60'],
       onPress: () => router.push('/tablet'),
     },
     {
-      title: 'Histórico de Vendas',
+      title: 'Histórico',
       subtitle: 'Vendas finalizadas',
       icon: 'time',
       color: '#9C27B0',
+      gradient: ['#AB47BC', '#8E24AA'],
       onPress: () => router.push('/(tabs)/historico'),
     },
     {
       title: 'Relatórios',
-      subtitle: 'Estatísticas e análise',
+      subtitle: 'Estatísticas',
       icon: 'bar-chart',
       color: '#607D8B',
+      gradient: ['#78909C', '#546E7A'],
       onPress: () => router.push('/(tabs)/admin-relatorios'),
     },
     {
-      title: 'Entrega / Delivery',
-      subtitle: 'Dashboard de Entregas',
+      title: 'Delivery',
+      subtitle: 'Entregas',
       icon: 'bicycle',
       color: '#009688',
+      gradient: ['#26A69A', '#00897B'],
       onPress: () => router.push('/delivery-dashboard'),
     },
     {
       title: 'Configurações',
-      subtitle: 'Ajustes e Delivery',
+      subtitle: 'Sistema',
       icon: 'settings-sharp',
       color: '#607D8B',
+      gradient: ['#78909C', '#546E7A'],
       onPress: () => router.push('/configuracoes'),
     },
   ];
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <ScreenIdentifier screenName="Home" />
-      
-      {/* Menu Dropdown - Apenas Web */}
-      {Platform.OS === 'web' && <WebDropdownMenu />}
-
-      {/* Header com informações do usuário */}
-      <View style={styles.header}>
-        <View style={styles.userInfo}>
-          <Text style={styles.welcomeText}>Bem-vindo(a),</Text>
-          <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
-          <Text style={styles.userRole}>{user?.role?.nome || (typeof user?.role === 'string' ? user.role : 'Funcionário')}</Text>
-        </View>
-        <View style={styles.headerActions}>
-          {Platform.OS === 'web' && (
-            <TouchableOpacity
-              style={styles.settingsButton}
-              onPress={handleOpenSettings}
-              activeOpacity={0.8}
-              accessibilityLabel="Abrir Configurações"
-            >
-              <SafeIcon name="settings" size={22} color="#fff" fallbackText="Cfg" />
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.8}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <SafeIcon name="log-out" size={22} color="#fff" fallbackText="Sair" />
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sair</Text>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1565C0" />
+      <HeaderBackground style={styles.header}>
+        <View style={styles.headerContent}>
+          <View style={styles.userInfo}>
+            <Text style={styles.welcomeLabel}>Bem-vindo(a),</Text>
+            <Text style={styles.userName}>{user?.name || 'Usuário'}</Text>
+            <View style={styles.roleBadge}>
+              <Text style={styles.userRole}>{user?.role?.nome || (typeof user?.role === 'string' ? user.role : 'Funcionário')}</Text>
             </View>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Status Rápido - Apenas Web */}
-      {Platform.OS === 'web' && (
-      <View style={styles.statsContainer}>
-        <Text style={styles.sectionTitle}>Status de Hoje</Text>
-        <View style={styles.statsGrid}>
-          <View style={[styles.statCard, { backgroundColor: '#E8F5E8' }]}>
-            <SafeIcon name="trending-up" size={20} color="#4CAF50" fallbackText="↑" />
-            <Text style={styles.statNumber}>{stats.totalSales}</Text>
-            <Text style={styles.statLabel}>Vendas</Text>
           </View>
-          <View style={[styles.statCard, { backgroundColor: '#E3F2FD' }]}>
-            <SafeIcon name="cash" size={20} color="#FF0000" fallbackText="R$" />
-            <Text style={styles.statNumber}>R$ {stats.totalRevenue.toFixed(2)}</Text>
-            <Text style={styles.statLabel}>Faturamento</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: '#FFF3E0' }]}>
-            <SafeIcon name="restaurant" size={20} color="#FF9800" fallbackText="🍽" />
-            <Text style={styles.statNumber}>{stats.openTables}</Text>
-            <Text style={styles.statLabel}>Mesas Abertas</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: '#F3E5F5' }]}>
-            <SafeIcon name="receipt" size={20} color="#9C27B0" fallbackText="Rec" />
-            <Text style={styles.statNumber}>{stats.openComandas}</Text>
-            <Text style={styles.statLabel}>Comandas Abertas</Text>
-          </View>
-        </View>
-      </View>
-      )}
-
-      {/* Menu Principal */}
-      <View style={styles.menuContainer}>
-        <Text style={styles.sectionTitle}>Menu Principal</Text>
-        <View style={styles.menuGrid}>
-          {menuItems.filter(item => {
-            // Filtrar Histórico no mobile
-            if (Platform.OS !== 'web' && item.title === 'Histórico de Vendas') return false;
-            // Filtrar Relatórios no mobile (apenas Desktop)
-            if (Platform.OS !== 'web' && item.title === 'Relatórios') return false;
-            return true;
-          }).map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[styles.menuItem, { borderLeftColor: item.color }]}
-              onPress={item.onPress}
-            >
-              <View style={[styles.menuIcon, { backgroundColor: item.color }]}>
-                <SafeIcon name={item.icon as any} size={22} color="#fff" fallbackText="▶" />
-              </View>
-              <View style={styles.menuContent}>
-                <Text style={styles.menuTitle}>{item.title}</Text>
-                <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-              </View>
-
-
+          <View style={styles.headerActions}>
+             {Platform.OS === 'web' && (
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => router.push('/configuracoes')}
+              >
+                <SafeIcon name="settings" size={20} color="#fff" fallbackText="⚙" />
+              </TouchableOpacity>
+             )}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+              <SafeIcon name="log-out" size={20} color="#fff" fallbackText="Exit" />
             </TouchableOpacity>
-          ))}
+          </View>
         </View>
-      </View>
-    </ScrollView>
+      </HeaderBackground>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#2196F3']} />
+        }
+      >
+        <ScreenIdentifier screenName="Home" />
+        
+        {/* Menu Dropdown - Apenas Web */}
+        {Platform.OS === 'web' && <WebDropdownMenu />}
+
+        {/* Status Rápido - Apenas Web ou Tablet Grande */}
+        {(Platform.OS === 'web' || Dimensions.get('window').width > 600) && (
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Visão Geral de Hoje</Text>
+          <View style={styles.statsGrid}>
+            <View style={[styles.statCard]}>
+              <View style={[styles.statIconBox, { backgroundColor: '#E8F5E8' }]}>
+                <SafeIcon name="trending-up" size={24} color="#4CAF50" fallbackText="↑" />
+              </View>
+              <View>
+                <Text style={styles.statNumber}>{stats.totalSales}</Text>
+                <Text style={styles.statLabel}>Vendas</Text>
+              </View>
+            </View>
+            <View style={[styles.statCard]}>
+              <View style={[styles.statIconBox, { backgroundColor: '#E3F2FD' }]}>
+                <SafeIcon name="cash" size={24} color="#2196F3" fallbackText="$" />
+              </View>
+              <View>
+                <Text style={styles.statNumber}>R$ {stats.totalRevenue.toFixed(2)}</Text>
+                <Text style={styles.statLabel}>Faturamento</Text>
+              </View>
+            </View>
+            <View style={[styles.statCard]}>
+              <View style={[styles.statIconBox, { backgroundColor: '#FFF3E0' }]}>
+                <SafeIcon name="restaurant" size={24} color="#FF9800" fallbackText="🍽" />
+              </View>
+              <View>
+                <Text style={styles.statNumber}>{stats.openTables}</Text>
+                <Text style={styles.statLabel}>Mesas</Text>
+              </View>
+            </View>
+            <View style={[styles.statCard]}>
+               <View style={[styles.statIconBox, { backgroundColor: '#F3E5F5' }]}>
+                <SafeIcon name="receipt" size={24} color="#9C27B0" fallbackText="📝" />
+              </View>
+              <View>
+                <Text style={styles.statNumber}>{stats.openComandas}</Text>
+                <Text style={styles.statLabel}>Comandas</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+        )}
+
+        {/* Menu Principal Grid */}
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>Acesso Rápido</Text>
+          <View style={styles.menuGrid}>
+            {menuItems.filter(item => {
+              // Filtrar Histórico no mobile
+              if (Platform.OS !== 'web' && item.title === 'Histórico') return false;
+              // Filtrar Relatórios no mobile (apenas Desktop)
+              if (Platform.OS !== 'web' && item.title === 'Relatórios') return false;
+              return true;
+            }).map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.menuCard}
+                onPress={item.onPress}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.menuIconContainer, { backgroundColor: item.color }]}>
+                  <SafeIcon name={item.icon as any} size={28} color="#fff" fallbackText="•" />
+                </View>
+                <View style={styles.menuTextContainer}>
+                  <Text style={styles.menuItemTitle}>{item.title}</Text>
+                  <Text style={styles.menuItemSubtitle}>{item.subtitle}</Text>
+                </View>
+                <SafeIcon name="chevron-forward" size={18} color="#CBD5E1" fallbackText=">" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+        
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F8FAFC',
   },
   header: {
-    backgroundColor: '#2196F3',
-    padding: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : 20,
+    paddingBottom: 30,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+  },
+  headerContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 24,
   },
   userInfo: {
-    flex: 1,
+    justifyContent: 'center',
   },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  welcomeText: {
-    color: '#fff',
-    fontSize: 16,
-    opacity: 0.9,
+  welcomeLabel: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    marginBottom: 2,
   },
   userName: {
     color: '#fff',
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
+  },
+  roleBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignSelf: 'flex-start',
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderRadius: 12,
     marginTop: 4,
   },
   userRole: {
     color: '#fff',
-    fontSize: 14,
-    opacity: 0.8,
-    marginTop: 2,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  iconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   logoutButton: {
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,50,50,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  settingsButton: {
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    marginRight: 8,
+  scrollView: {
+    flex: 1,
+    marginTop: -20, // Sobrepor levemente o header
   },
-  statsContainer: {
-    padding: 20,
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  sectionContainer: {
+    marginTop: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 15,
+    fontWeight: '700',
+    color: '#334155',
+    marginBottom: 16,
+    marginLeft: 4,
   },
   statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'nowrap',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 12,
   },
   statCard: {
-    width: '24%',
-    padding: 10,
-    borderRadius: 10,
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
     alignItems: 'center',
-    marginBottom: 0,
+    justifyContent: 'center',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+  statIconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   statNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
-    marginTop: 6,
+    color: '#1E293B',
+    textAlign: 'center',
   },
   statLabel: {
-    fontSize: 10,
-    color: '#666',
-    marginTop: 2,
-  },
-  menuContainer: {
-    padding: 20,
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
   },
   menuGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    gap: 16,
   },
-  menuItem: {
+  menuCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 20,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    borderLeftWidth: 4,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-    width: '48%',
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
   },
-  menuIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+  menuIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 15,
+    marginRight: 16,
   },
-  menuContent: {
+  menuTextContainer: {
     flex: 1,
   },
-  menuTitle: {
-    fontSize: 14,
+  menuItemTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1E293B',
+    marginBottom: 2,
   },
-  menuSubtitle: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 2,
+  menuItemSubtitle: {
+    fontSize: 13,
+    color: '#64748B',
   },
 });
-
-const handleOpenSettings = () => {
-  router.push('/configuracoes');
-};

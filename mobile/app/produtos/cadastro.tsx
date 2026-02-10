@@ -610,10 +610,19 @@ export default function CadastroProduto() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <Stack.Screen options={{ headerShown: false }} />
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        {/* Header Compacto */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+      {/* Header Fixo no Topo */}
+      <View style={[styles.header, { paddingTop: Platform.OS === 'android' ? 40 : 16, zIndex: 10 }]}>
+          <TouchableOpacity 
+            onPress={() => {
+                if (router.canGoBack()) {
+                    router.back();
+                } else {
+                    router.replace('/(tabs)/admin-produtos');
+                }
+            }} 
+            style={styles.backButton}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Ionicons name="arrow-back" size={24} color="#2196F3" />
           </TouchableOpacity>
           <Text style={styles.title}>{isEditing ? 'Editar Produto' : 'Novo Produto'}</Text>
@@ -637,7 +646,11 @@ export default function CadastroProduto() {
               <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
             </View>
           )}
-        </View>
+      </View>
+
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header Compacto */}
+
 
         {/* Mensagem de erro global */}
         {saveError && (
@@ -742,92 +755,82 @@ export default function CadastroProduto() {
             </View>
           </View>
 
-          {/* Card de Classificação */}
+          {/* Card de Classificação (Linha Única - 4 Colunas) */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
               <Ionicons name="library" size={20} color="#FF9800" />
               <Text style={styles.cardTitle}>Classificação</Text>
             </View>
 
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Categoria *</Text>
-                <View style={[
-                  styles.pickerContainer,
-                  hasInteracted.categoria && validationErrors.categoria && styles.inputError
-                ]}>
-                  <Picker
-                    selectedValue={categoriaId}
-                    onValueChange={(value) => handleFieldChange(setCategoriaId, value, 'categoria')}
-                    style={styles.picker}
-                    enabled={!loadingCategorias}
-                  >
-                    <Picker.Item 
-                      label={loadingCategorias ? "Carregando categorias..." : "Selecione uma categoria"} 
-                      value="" 
-                    />
-                    {categorias.map((categoria) => (
-                      <Picker.Item
-                        key={categoria.id}
-                        label={categoria.nome}
-                        value={categoria.id}
-                      />
-                    ))}
-                  </Picker>
+            {/* Container Flex Row para 4 colunas de Dropdowns na mesma linha - Layout Compacto */}
+            <View style={{ flexDirection: 'row', gap: 8, width: '100%', paddingVertical: 8 }}>
+                {/* 1. Categoria */}
+                <View style={{ flex: 1 }}>
+                    <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>Categoria *</Text>
+                    <View style={[styles.pickerContainer, { height: 40, justifyContent: 'center' }]}>
+                        <Picker
+                            selectedValue={categoriaId}
+                            onValueChange={(value) => handleFieldChange(setCategoriaId, value, 'categoria')}
+                            style={[styles.picker, { transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }], marginLeft: -5 }]}
+                            enabled={!loadingCategorias}
+                        >
+                            <Picker.Item label="Selecione" value="" style={{ fontSize: 12 }} />
+                            {categorias.map((categoria) => (
+                                <Picker.Item key={categoria.id} label={categoria.nome} value={categoria.id} style={{ fontSize: 12 }} />
+                            ))}
+                        </Picker>
+                    </View>
+                    {hasInteracted.categoria && validationErrors.categoria && (
+                        <Text style={[styles.errorText, {fontSize: 10}]}>{validationErrors.categoria}</Text>
+                    )}
                 </View>
-                {hasInteracted.categoria && validationErrors.categoria && (
-                  <Text style={styles.errorText}>{validationErrors.categoria}</Text>
-                )}
-              </View>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Setor de Impressão</Text>
-                <TouchableOpacity
-                  style={styles.unidadeSelector}
-                  onPress={() => setShowSetoresModal(true)}
-                >
-                  <Text style={[styles.unidadeSelectorText, (!selectedSetores || selectedSetores.length === 0) && styles.placeholderText]}>
-                    {selectedSetores && selectedSetores.length > 0 ? setores.filter(s => selectedSetores.includes(String(s.id))).map(s => s.nome).join(', ') : 'Selecione setores'}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-            </View>
 
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Tipo</Text>
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={tipoId}
-                    onValueChange={(value) => handleFieldChange(setTipoId, value)}
-                    style={styles.picker}
-                  >
-                    <Picker.Item label="Tipo" value="" />
-                    {tipos.map((tipo) => (
-                      <Picker.Item
-                        key={tipo.id}
-                        label={tipo.nome}
-                        value={tipo.id}
-                      />
-                    ))}
-                  </Picker>
+                {/* 2. Setor */}
+                <View style={{ flex: 1 }}>
+                    <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>Setor</Text>
+                    <TouchableOpacity
+                        style={[styles.unidadeSelector, { padding: 8, minHeight: 40 }]}
+                        onPress={() => setShowSetoresModal(true)}
+                    >
+                        <Text style={[styles.unidadeSelectorText, {fontSize: 11}]} numberOfLines={1}>
+                            {selectedSetores && selectedSetores.length > 0 ? setores.filter(s => selectedSetores.includes(String(s.id))).map(s => s.nome).join(', ') : 'Selecione'}
+                        </Text>
+                        <Ionicons name="chevron-down" size={16} color="#666" />
+                    </TouchableOpacity>
                 </View>
-              </View>
 
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <Text style={styles.label}>Unidade</Text>
-                <TouchableOpacity
-                  style={styles.unidadeSelector}
-                  onPress={() => setShowUnidadeModal(true)}
-                >
-                  <Text style={[styles.unidadeSelectorText, !unidadeId && styles.placeholderText]}>
-                    {getSelectedUnidadeText()}
-                  </Text>
-                  <Ionicons name="chevron-down" size={20} color="#666" />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <View style={styles.switchContainer}>
+                {/* 3. Tipo */}
+                <View style={{ flex: 1 }}>
+                    <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>Tipo</Text>
+                    <View style={[styles.pickerContainer, { height: 40, justifyContent: 'center' }]}>
+                        <Picker
+                            selectedValue={tipoId}
+                            onValueChange={(value) => handleFieldChange(setTipoId, value)}
+                            style={[styles.picker, { transform: [{ scaleX: 0.9 }, { scaleY: 0.9 }], marginLeft: -5 }]}
+                        >
+                            <Picker.Item label="Selecione" value="" style={{ fontSize: 12 }} />
+                            {tipos.map((tipo) => (
+                                <Picker.Item key={tipo.id} label={tipo.nome} value={tipo.id} style={{ fontSize: 12 }} />
+                            ))}
+                        </Picker>
+                    </View>
+                </View>
+
+                {/* 4. Unidade */}
+                <View style={{ flex: 1 }}>
+                    <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>Unidade</Text>
+                    <TouchableOpacity
+                        style={[styles.unidadeSelector, { padding: 8, minHeight: 40 }]}
+                        onPress={() => setShowUnidadeModal(true)}
+                    >
+                        <Text style={[styles.unidadeSelectorText, {fontSize: 11}]} numberOfLines={1}>
+                            {getSelectedUnidadeText()}
+                        </Text>
+                        <Ionicons name="chevron-down" size={16} color="#666" />
+                    </TouchableOpacity>
+                </View>
+
+            </View>            <View style={styles.switchContainer}>
               <Text style={styles.label}>Produto com Tamanhos</Text>
               <Switch
                 value={temTamanhos}
@@ -905,29 +908,60 @@ export default function CadastroProduto() {
                 <Ionicons name="receipt" size={20} color="#9C27B0" />
                 <Text style={styles.cardTitle}>Dados Fiscais (NFC-e)</Text>
               </View>
-              <View style={styles.row}>
-                 <View style={[styles.inputGroup, styles.halfWidth]}>
-                   <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-                       <Text style={styles.label}>NCM (8 dígitos)</Text>
+              <View style={{ flexDirection: 'row', gap: 8, width: '100%', paddingVertical: 8 }}>
+                 {/* 1. NCM */}
+                 <View style={{ flex: 1 }}>
+                   <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4}}>
+                       <Text style={[styles.label, { fontSize: 11, marginBottom: 0 }]}>NCM</Text>
                        <TouchableOpacity onPress={openGptHelper}>
-                           <Text style={{color: '#2196F3', fontSize: 11, fontWeight: 'bold', marginBottom: 2}}>🤖 Consultar GPT</Text>
+                           <Ionicons name="help-circle" size={14} color="#2196F3" />
                        </TouchableOpacity>
                    </View>
-                   <TextInput style={styles.input} value={ncm} onChangeText={setNcm} keyboardType="numeric" maxLength={8} placeholder="00000000" />
+                   <TextInput 
+                     style={[styles.input, { height: 40, fontSize: 12 }]} 
+                     value={ncm} 
+                     onChangeText={setNcm} 
+                     keyboardType="numeric" 
+                     maxLength={8} 
+                     placeholder="00000000" 
+                   />
                  </View>
-                 <View style={[styles.inputGroup, styles.halfWidth]}>
-                   <Text style={styles.label}>CEST (7 dígitos)</Text>
-                   <TextInput style={styles.input} value={cest} onChangeText={setCest} keyboardType="numeric" maxLength={7} placeholder="0000000" />
+
+                 {/* 2. CEST */}
+                 <View style={{ flex: 1 }}>
+                   <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>CEST</Text>
+                   <TextInput 
+                     style={[styles.input, { height: 40, fontSize: 12 }]} 
+                     value={cest} 
+                     onChangeText={setCest} 
+                     keyboardType="numeric" 
+                     maxLength={7} 
+                     placeholder="0000000" 
+                   />
                  </View>
-              </View>
-              <View style={styles.row}>
-                 <View style={[styles.inputGroup, styles.halfWidth]}>
-                   <Text style={styles.label}>CFOP</Text>
-                   <TextInput style={styles.input} value={cfop} onChangeText={setCfop} keyboardType="numeric" maxLength={4} />
+
+                 {/* 3. CFOP */}
+                 <View style={{ flex: 1 }}>
+                   <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>CFOP</Text>
+                   <TextInput 
+                     style={[styles.input, { height: 40, fontSize: 12 }]} 
+                     value={cfop} 
+                     onChangeText={setCfop} 
+                     keyboardType="numeric" 
+                     maxLength={4} 
+                   />
                  </View>
-                 <View style={[styles.inputGroup, styles.halfWidth]}>
-                   <Text style={styles.label}>CSOSN</Text>
-                   <TextInput style={styles.input} value={csosn} onChangeText={setCsosn} keyboardType="numeric" maxLength={4} />
+
+                 {/* 4. CSOSN */}
+                 <View style={{ flex: 1 }}>
+                   <Text style={[styles.label, { fontSize: 11, marginBottom: 4 }]}>CSOSN</Text>
+                   <TextInput 
+                     style={[styles.input, { height: 40, fontSize: 12 }]} 
+                     value={csosn} 
+                     onChangeText={setCsosn} 
+                     keyboardType="numeric" 
+                     maxLength={4} 
+                   />
                  </View>
               </View>
            </View>
@@ -1427,5 +1461,41 @@ const styles = StyleSheet.create({
   },
   unidadeItemSelectedText: {
     color: '#2196F3',
+  },
+  // Estilos para Chips (Layout Horizontal)
+  chipScroll: {
+    paddingVertical: 4,
+    maxHeight: 40, 
+  },
+  chip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 40,
+  },
+  chipActive: {
+    backgroundColor: '#FFE0B2',
+    borderColor: '#FF9800',
+  },
+  chipText: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '500',
+  },
+  chipTextActive: {
+    color: '#E65100',
+    fontWeight: '700',
+  },
+  sectionLabel: {
+      fontSize: 14,
+      fontWeight: 'bold',
+      color: '#1E293B',
+      marginBottom: 8,
   },
 });
