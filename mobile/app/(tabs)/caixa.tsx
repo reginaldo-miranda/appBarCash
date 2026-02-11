@@ -20,7 +20,12 @@ import { SafeIcon } from '../../components/SafeIcon';
 
 interface Sale {
   _id: string;
+  id?: string | number;
   numeroComanda?: string;
+  cliente?: { nome: string };
+  nomeCliente?: string;
+  consumidor?: { nome: string };
+  nomeConsumidor?: string;
   nomeComanda?: string;
   tipoVenda: string;
   status: string;
@@ -77,6 +82,9 @@ export default function CaixaScreen() {
   
   // Novo estado para filtro de exibição (Abertas vs Registradas)
   const [displayFilter, setDisplayFilter] = useState<'all' | 'open' | 'registered'>('all');
+  
+  // Estado para armazenar informações do caixa (nome, id, etc)
+  const [caixaInfo, setCaixaInfo] = useState<any>(null);
 
   // Helpers e cálculos para filtro por data e subtotais
   const formatSelectedDate = selectedDate.toLocaleDateString('pt-BR');
@@ -118,7 +126,7 @@ export default function CaixaScreen() {
     return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
   };
 
-  const loadVendas = async () => {
+  const loadVendas = React.useCallback(async () => {
     try {
       setLoading(true);
       console.log('🔄 Carregando vendas abertas do Caixa...');
@@ -146,14 +154,15 @@ export default function CaixaScreen() {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, []);
 
-  const loadCaixaAberto = async () => {
+  const loadCaixaAberto = React.useCallback(async () => {
     try {
       console.log('🔄 Buscando caixa aberto e vendas registradas...');
       const resp = await caixaService.statusAberto();
       const caixaData = resp.data;
       setHasCaixaAberto(true);
+      setCaixaInfo(caixaData);
 
       const vendasRegistradas: CaixaVenda[] = (caixaData?.vendas || []).map((v: any) => ({
         venda: v.venda,
@@ -168,11 +177,12 @@ export default function CaixaScreen() {
         console.log('ℹ️ Nenhum caixa aberto no momento.');
         setHasCaixaAberto(false);
         setCaixaVendas([]);
+        setCaixaInfo(null);
       } else {
         console.error('❌ Erro ao buscar caixa aberto:', error);
       }
     }
-  };
+  }, []);
 
   // Atualizações sem spinner para evitar flicker
   const softRefreshVendas = async () => {
@@ -401,18 +411,18 @@ export default function CaixaScreen() {
     return 'Comanda';
   };
 
-  const onRefresh = () => {
+  const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     loadVendas();
     loadCaixaAberto();
-  };
+  }, [loadVendas, loadCaixaAberto]);
 
   // Recarrega ao focar na tela (útil após fechar mesa em outra aba)
   useFocusEffect(
     React.useCallback(() => {
       onRefresh();
       return () => {};
-    }, [])
+    }, [onRefresh])
   );
 
   if (loading) {
@@ -583,65 +593,96 @@ export default function CaixaScreen() {
                     <Text style={styles.emptyText}>Nenhuma venda registrada no caixa</Text>
                 </View>
                 ) : (
-                <View style={styles.listGrid}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ minWidth: 680 }}>
+                <View style={styles.tableContainer}>
+                    {/* Header da Tabela */}
+                    <View style={styles.tableHeader}>
+                        <Text style={[styles.tableHeaderText, { width: 90 }]} numberOfLines={1}>Nº Venda</Text>
+                        <Text style={[styles.tableHeaderText, { width: 80 }]} numberOfLines={1}>Origem</Text>
+                        <Text style={[styles.tableHeaderText, { width: 100 }]} numberOfLines={1}>Espécie</Text>
+                        <Text style={[styles.tableHeaderText, { width: 60 }]} numberOfLines={1}>Hora</Text>
+                        <Text style={[styles.tableHeaderText, { width: 180 }]} numberOfLines={1}>Cliente</Text>
+                        <Text style={[styles.tableHeaderText, { width: 100 }]} numberOfLines={1}>Func</Text>
+                        <Text style={[styles.tableHeaderText, { width: 90, textAlign: 'right' }]}>Valor</Text>
+                        {Platform.OS === 'web' && <Text style={[styles.tableHeaderText, { width: 40, textAlign: 'center' }]}>Ok</Text>}
+                    </View>
+
                     {filteredCaixaVendas.map((cv, idx) => {
+                    // console.log('DEBUG VENDA:', cv.venda);
                     const mesaObj: any = mesaInfoBySale[saleKey(cv.venda)] || ((cv.venda.mesa && typeof cv.venda.mesa === 'object') ? cv.venda.mesa : undefined);
                     const clean = (s: any) => (typeof s === 'string' ? s.trim() : '');
                     const nomeRespMesa = clean(mesaObj?.nomeResponsavel);
                     const nomeFuncMesa = clean(mesaObj?.funcionarioResponsavel?.nome);
-                    let responsavel = 
-                        nomeRespMesa ||
-                        clean(cv.venda?.responsavelNome) ||
-                        'N/A';
+                    
+                    // Lógica para definir Origem (Prioriza tipoVenda)
+                    const tipo = String(cv.venda.tipoVenda || '').toUpperCase();
+                    let origem = 'Balcão';
+                    if (tipo === 'MESA' || cv.venda.mesa) origem = 'Mesa';
+                    else if (tipo === 'COMANDA' || cv.venda.numeroComanda) origem = 'Comanda';
+
+                    let responsavel = '';
+                    
+                    if (origem === 'Balcão') {
+                       // Prioriza o nome inserido no fechamento (responsavelNome)
+                       responsavel = 
+                         clean(cv.venda?.responsavelNome) ||
+                         clean(cv.venda?.cliente?.nome) ||
+                         clean(cv.venda?.nomeCliente) ||
+                         clean(cv.venda?.consumidor?.nome) ||
+                         clean(cv.venda?.nomeConsumidor) ||
+                         'CONSUMIDOR';
+                    } else {
+                       responsavel = 
+                         nomeRespMesa ||
+                         clean(cv.venda?.cliente?.nome) ||
+                         clean(cv.venda?.nomeCliente) ||
+                         clean(cv.venda?.responsavelNome) ||
+                         clean(cv.venda?.consumidor?.nome) ||
+                         clean(cv.venda?.nomeConsumidor) ||
+                         'CONSUMIDOR';
+                    }
+                        
                     let funcionario = 
                         nomeFuncMesa ||
                         clean(cv.venda?.funcionario?.nome) ||
                         clean((cv.venda as any)?.funcionarioAberturaNome) ||
                         clean((cv.venda as any)?.funcionarioNome) ||
                         'N/A';
-                    if (responsavel !== 'N/A' && funcionario !== 'N/A' && responsavel === funcionario) {
-                        const respAlt = clean(cv.venda?.responsavelNome);
-                        if (respAlt && respAlt !== funcionario) {
-                        responsavel = respAlt;
-                        } else {
-                        responsavel = 'N/A';
-                        }
-                    }
+                    
+                    const vendaId = cv.venda?._id || cv.venda?.id;
+                    const numeroVenda = cv.venda?.numeroComanda || (mesaObj ? (mesaObj.nome || (mesaObj.numero ? `Mesa ${mesaObj.numero}` : '')) : '') || ((vendaId && typeof vendaId === 'string') ? vendaId.slice(-6).toUpperCase() : (vendaId ? String(vendaId) : 'N/A'));
+
+                    const hora = cv.dataVenda ? new Date(cv.dataVenda).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+
                     return (
-                        <View key={`${saleKey(cv.venda)}-${idx}`} style={styles.vendaCard}>
-                        <View style={styles.rowLine}>
-                            <Text style={styles.vendaTitle}>
-                            {mesaObj
-                                ? (mesaObj?.nome || (mesaObj?.numero != null ? `Mesa ${mesaObj?.numero}` : 'Mesa'))
-                                : getVendaTitle(cv.venda)}
-                            </Text>
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Text style={styles.vendaTotal}>R$ {cv.valor.toFixed(2)}</Text>
+                        <View key={`${saleKey(cv.venda)}-${idx}`} style={styles.tableRow}>
+                            <Text style={[styles.tableCell, { width: 90 }]} numberOfLines={1}>{String(numeroVenda || 'N/A')}</Text>
+                            <Text style={[styles.tableCell, { width: 80 }]} numberOfLines={1}>{origem}</Text>
+                            <Text style={[styles.tableCell, { width: 100 }]} numberOfLines={1}>{cv.formaPagamento}</Text>
+                            <Text style={[styles.tableCell, { width: 60 }]} numberOfLines={1}>{hora}</Text>
+                            <Text style={[styles.tableCell, { width: 180 }]} numberOfLines={1}>{responsavel}</Text>
+                            <Text style={[styles.tableCell, { width: 100 }]} numberOfLines={1}>{funcionario}</Text>
+                            <Text style={[styles.tableCell, { width: 90, textAlign: 'right', fontWeight: 'bold' }]}>R$ {cv.valor.toFixed(2)}</Text>
                             {Platform.OS === 'web' && (
-                                <TouchableOpacity
-                                style={styles.rowAction}
-                                onPress={() => toggleMark(saleKey(cv.venda))}
-                                accessibilityLabel={marks[saleKey(cv.venda)] ? 'Desmarcar' : 'Marcar'}
-                                >
-                                <SafeIcon
-                                    name={marks[saleKey(cv.venda)] ? 'checkbox' : 'square-outline'}
-                                    size={18}
-                                    color={marks[saleKey(cv.venda)] ? '#2196F3' : '#999'}
-                                    fallbackText={marks[saleKey(cv.venda)] ? '☑' : '☐'}
-                                />
-                                </TouchableOpacity>
+                                <View style={{ width: 40, alignItems: 'center' }}>
+                                    <TouchableOpacity
+                                    onPress={() => toggleMark(saleKey(cv.venda))}
+                                    accessibilityLabel={marks[saleKey(cv.venda)] ? 'Desmarcar' : 'Marcar'}
+                                    >
+                                    <SafeIcon
+                                        name={marks[saleKey(cv.venda)] ? 'checkbox' : 'square-outline'}
+                                        size={18}
+                                        color={marks[saleKey(cv.venda)] ? '#2196F3' : '#999'}
+                                        fallbackText={marks[saleKey(cv.venda)] ? '☑' : '☐'}
+                                    />
+                                    </TouchableOpacity>
+                                </View>
                             )}
-                            </View>
-                        </View>
-                        <View style={styles.rowLine}>
-                            <Text style={styles.vendaInfoCompact}>
-                            Resp: {responsavel} | Atend: {funcionario} | Pgto: {cv.formaPagamento} | Itens: {cv.venda?.itens?.length ?? 0}
-                            </Text>
-                        </View>
                         </View>
                     );
                     })}
                 </View>
+                </ScrollView>
                 )}
             </>
             )}
@@ -718,7 +759,7 @@ export default function CaixaScreen() {
 
 
 
-const styles = StyleSheet.create({
+const styles: any = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F1F5F9', // Fundo levemente mais escuro para contraste das linhas brancas
@@ -801,8 +842,45 @@ const styles = StyleSheet.create({
       color: '#64748B',
   },
   viewFilterTextSelected: {
-      color: '#0F172A', // Texto preto suave
-      fontWeight: '700',
+    color: '#0F172A',
+  },
+
+  // Tabela
+  tableContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  tableHeaderText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    paddingHorizontal: 4,
+  },
+  tableRow: {
+    flexDirection: 'row',
+    paddingVertical: 6, // Reduzido de 12 para 6 (50%)
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  tableCell: {
+    fontSize: 13,
+    color: '#334155',
+    paddingHorizontal: 4,
   },
 
   sectionTitle: {
@@ -949,7 +1027,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
-    width: Platform.OS === 'web' ? '380px' : '90%',
+    width: Platform.OS === 'web' ? 380 : '90%',
     maxWidth: 400,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
