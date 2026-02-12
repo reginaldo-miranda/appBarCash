@@ -395,20 +395,37 @@ export default function CaixaScreen() {
     }
   }, [caixaVendas]);
 
-  // Helper para título da venda evitando "Mesa undefined"
   const getVendaTitle = (venda: Sale) => {
-    // Preferir presença de venda.mesa ao invés de tipoVenda
-    if (venda.mesa) {
+    // 1. Prioridade absoluta para tipoVenda explícito
+    const tipo = String(venda.tipoVenda || '').toUpperCase();
+    if (tipo === 'BALCAO') {
+        const nomeCliente = venda.nomeCliente || venda.cliente?.nome || venda.responsavelNome || 'Balcão';
+        return `Venda - ${nomeCliente}`;
+    }
+
+    // 2. Check seguro para Mesa (evitar "ghost" mesa)
+    if (tipo === 'MESA' || (venda.mesa && (venda.mesa.numero || venda.mesa.nome))) {
       const nomeMesa = venda.mesa?.nome;
       const numeroMesa = venda.mesa?.numero;
       if (nomeMesa) return nomeMesa;
       if (numeroMesa != null) return `Mesa ${numeroMesa}`;
-      return 'Mesa';
+      
+      // Se for MESA, mas não tiver nome nem número, mostra "Venda - Cliente" em vez de "Mesa"
+      // (Isso corrige o caso onde o sistema força 'mesa' internamente para balcão)
+      const nomeClienteFallback = venda.nomeCliente || venda.cliente?.nome || venda.responsavelNome || 'Balcão';
+      return `Venda - ${nomeClienteFallback}`;
     }
-    // Quando for comanda, explicitar “Comanda” no título
-    if (venda.nomeComanda) return `Comanda ${venda.nomeComanda}`;
-    if (venda.numeroComanda) return `Comanda ${venda.numeroComanda}`;
-    return 'Comanda';
+
+    // 3. Comanda: Só se tiver NOME ou NÚMERO explícito de comanda
+    if (tipo === 'COMANDA' || (venda.nomeComanda && venda.nomeComanda.trim().length > 0) || (venda.numeroComanda && String(venda.numeroComanda).trim().length > 0)) {
+        if (venda.nomeComanda) return `Comanda ${venda.nomeComanda}`;
+        if (venda.numeroComanda) return `Comanda ${venda.numeroComanda}`;
+        return 'Comanda';
+    }
+
+    // 4. Fallback final seguro: Se não é Mesa nem Comanda EXPLÍCITA, é Venda Balcão (mesmo sem tipoVenda)
+    const nomeClienteFallback = venda.nomeCliente || venda.cliente?.nome || venda.responsavelNome || 'Balcão';
+    return `Venda - ${nomeClienteFallback}`;
   };
 
   const onRefresh = React.useCallback(() => {
@@ -614,11 +631,33 @@ export default function CaixaScreen() {
                     const nomeRespMesa = clean(mesaObj?.nomeResponsavel);
                     const nomeFuncMesa = clean(mesaObj?.funcionarioResponsavel?.nome);
                     
-                    // Lógica para definir Origem (Prioriza tipoVenda)
+                    // Lógica para definir Origem (Prioriza tipoVenda mas verifica objetos)
                     const tipo = String(cv.venda.tipoVenda || '').toUpperCase();
+                    
+                    // DEBUG: Descomente para ver no terminal do Metro
+                    // console.log(`[DEBUG] Venda ${cv.venda._id}: Tipo=${tipo}, Mesa=${JSON.stringify(cv.venda.mesa)}, Comanda=${cv.venda.numeroComanda}`);
+
                     let origem = 'Balcão';
-                    if (tipo === 'MESA' || cv.venda.mesa) origem = 'Mesa';
-                    else if (tipo === 'COMANDA' || cv.venda.numeroComanda) origem = 'Comanda';
+                    // Check mais seguro para objeto mesa: deve ter numero ou nome VALIDOs. 
+                    // Apenas _id não conta (pode ser lixo de banco)
+                    const hasMesa = cv.venda.mesa && (
+                        (typeof cv.venda.mesa === 'object' && (cv.venda.mesa.numero || cv.venda.mesa.nome ))
+                    );
+
+                    if (tipo.includes('BALC')) {
+                        origem = 'Balcão';
+                    } else if (tipo.includes('MESA')) {
+                        origem = 'Mesa';
+                    } else if (tipo.includes('COMANDA')) {
+                         origem = 'Comanda';
+                    } else {
+                        // Fallback: se tipo não definido, tenta inferir
+                        if (hasMesa) {
+                            origem = 'Mesa';
+                        } else if (cv.venda.numeroComanda || cv.venda.nomeComanda) {
+                            origem = 'Comanda';
+                        }
+                    }
 
                     let responsavel = '';
                     

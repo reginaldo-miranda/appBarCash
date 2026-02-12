@@ -52,7 +52,7 @@ export default function SaleScreen() {
   const { mesaId, vendaId, viewMode } = params;
   // Inferir tipo se não vier explícito, mas tiver mesaId
   const tipo = params.tipo || (mesaId ? 'mesa' : undefined);
-
+  
   const { user } = useAuth() as any;
   // const { confirmRemove } = useConfirmation();
   
@@ -611,7 +611,8 @@ export default function SaleScreen() {
 
       const saleData = {
         funcionario: user._id,
-        tipoVenda: tipo || 'mesa',
+        // Forçar 'mesa' se for Balcao, pois DB rejeita enum 'balcao'
+        tipoVenda: (tipo === 'balcao' || !tipo) ? 'mesa' : tipo,
         ...(mesaId && { mesa: mesaId }),
         status: 'aberta',
         clienteId: selectedCliente?.id || null,
