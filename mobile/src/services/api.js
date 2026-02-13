@@ -44,12 +44,17 @@ function resolveApiBaseUrl() {
   const ENV_URL = getEnvBaseUrl();
   if (ENV_URL) return ENV_URL;
 
-  // Ambiente Web: se host for local, tentar extrair IP da LAN do Metro/DevClient
+  // Ambiente Web / Electron: se host for local ou inválido (Electron serve usa app://-), assumir localhost
   if (Platform.OS === 'web' && typeof window !== 'undefined') {
     const hostname = window.location.hostname || '';
+    const protocol = window.location.protocol || '';
+    
     if (hostname) {
-      const hostOut = LOCAL_HOSTNAMES.has(hostname) ? 'localhost' : hostname;
-      return `http://${hostOut}:${DEFAULT_PORT}/api`;
+      // Correção para Electron: se hostname for '-' ou protocolo for 'app:', assumir localhost
+      if (hostname === '-' || protocol === 'app:' || LOCAL_HOSTNAMES.has(hostname)) {
+        return `http://localhost:${DEFAULT_PORT}/api`;
+      }
+      return `http://${hostname}:${DEFAULT_PORT}/api`;
     }
     const candidates = [];
     try {

@@ -69,6 +69,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// --- SERVIR FRONTEND (Site) ---
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Serve arquivos estáticos da pasta 'public' (onde fica o build do site)
+app.use(express.static(path.join(__dirname, "public")));
+
+// --- FIM CONFIG SITE ---
+
 // Rota de saúde pública para teste de conexão
 // Endpoint para controle de API (usado pelo mobile)
 app.get('/dev/start-api', (req, res) => {
@@ -271,7 +282,17 @@ app.use("/api/printer", authenticate, printerRoutes);
 app.use("/api/nfce", nfceRoutes);
 app.use("/api/system", systemRoutes); // Public for setup
 app.use("/api/idle-time-config", authenticate, idleTimeConfigRoutes);
-app.use("/api/roles", authenticate, roleRoutes);
+app.use("/api/roles", authenticate, roleRoutes); // FIM ROTAS API
+
+// Tratamento de 404 para rotas da API que não existem
+app.all('/api/*', (req, res) => {
+  res.status(404).json({ ok: false, message: 'Rota API não encontrada' });
+});
+
+// Para qualquer outra rota (que não seja API nem arquivo estático), servir o index.html (SPA)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, '0.0.0.0', () => console.log(`✅ API rodando em: http://0.0.0.0:${PORT}`));

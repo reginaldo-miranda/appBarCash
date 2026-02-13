@@ -147,9 +147,15 @@ export default function LoginScreen() {
       const candidates: string[] = [];
       if (Platform.OS === "web" && typeof window !== "undefined") {
         const host = String(window.location.hostname || "");
+        const protocol = String(window.location.protocol || "");
+        
+        // Correção para Electron (Desktop)
+        if (host === '-' || protocol === 'app:' || ["localhost", "127.0.0.1", "::1", "0.0.0.0"].includes(host)) {
+           return `http://localhost:${DEFAULT_PORT}/api`;
+        }
+        
         if (host) {
-          const hostOut = ["localhost", "127.0.0.1", "::1", "0.0.0.0"].includes(host) ? "localhost" : host;
-          return `http://${hostOut}:${DEFAULT_PORT}/api`;
+          return `http://${host}:${DEFAULT_PORT}/api`;
         }
       }
       // Host do bundle JS (mais confiável)
