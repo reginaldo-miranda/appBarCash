@@ -611,8 +611,8 @@ export default function SaleScreen() {
 
       const saleData = {
         funcionario: user._id,
-        // Forçar 'mesa' se for Balcao, pois DB rejeita enum 'balcao'
-        tipoVenda: (tipo === 'balcao' || !tipo) ? 'mesa' : tipo,
+        // Permite 'balcao' pois o backend já suporta
+        tipoVenda: tipo || 'balcao',
         ...(mesaId && { mesa: mesaId }),
         status: 'aberta',
         clienteId: selectedCliente?.id || null,
