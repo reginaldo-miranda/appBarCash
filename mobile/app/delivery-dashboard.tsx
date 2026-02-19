@@ -1,0 +1,459 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
+  Platform
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import api, { saleService, apiService, getWsUrl, API_URL } from '../src/services/api';
+import NfceService from '../src/services/NfceService'; // Importação do Serviço NFC-e
+import ScreenIdentifier from '../src/components/ScreenIdentifier';
+import { Linking, Modal } from 'react-native';
+import PaymentSplitModal from '../src/components/PaymentSplitModal';
+import ReceiptModal from '../src/components/ReceiptModal';
+// import DateTimePicker from '@react-native-community/datetimepicker';
+
+export default function DeliveryDashboardScreen() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [deliveries, setDeliveries] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Filter States
+  const [filterStatus, setFilterStatus] = useState('pending'); // pending, delivered, all
+  const [dateRange, setDateRange] = useState('today'); // today, all, custom
+  const [customStart, setCustomStart] = useState(new Date());
+  const [customEnd, setCustomEnd] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [datePickerMode, setDatePickerMode] = useState<'start'|'end'>('start');
+
+  // Modal States
+  const [splitModalVisible, setSplitModalVisible] = useState(false);
+  const [selectedSale, setSelectedSale] = useState<any>(null);
+
+  // Receipt Modal
+  const [receiptModalVisible, setReceiptModalVisible] = useState(false);
+  const [selectedReceiptSale, setSelectedReceiptSale] = useState<any>(null);
+
+  const handleOpenReceipt = (sale: any) => {
+      setSelectedReceiptSale(sale);
+      setReceiptModalVisible(true);
+  };
+
+  const loadDeliveries = async () => {
+    try {
+      setLoading(true);
+      const params: any = { isDelivery: true };
+      
+      // Status Filter
+      // Status Filter
+      if (filterStatus === 'pending') {
+          // params.status = 'aberta'; // REMOVED: Paid items (finalizada) can still be pending delivery
+      } else if (filterStatus === 'delivered') {
+          // params.status = 'finalizada'; // REMOVED: User wants to see ALL delivered items regardless of sale status
+      }
+
+      // Date Filter
+      const now = new Date();
+      if (dateRange === 'today') {
+          const start = new Date(now); start.setHours(0,0,0,0);
+          const end = new Date(now); end.setHours(23,59,59,999);
+          params.dataInicio = start.toISOString();
+          params.dataFim = end.toISOString();
+      }
+
+      const res = await saleService.list(params);
+      
+      if (res.data && Array.isArray(res.data)) {
+         let filtered = res.data;
+         
+         // Client-side Refined Filtering for Delivery Status
+         if (filterStatus === 'pending') {
+             // Pending = Not Delivered (mesmo que já esteja paga/finalizada)
+             filtered = filtered.filter((s:any) => s.deliveryStatus !== 'delivered');
+         } else if (filterStatus === 'delivered') {
+             // Delivered = Apenas status explícito de entregue
+             filtered = filtered.filter((s:any) => s.deliveryStatus === 'delivered');
+         }
+         // If filterStatus === 'all', we don't filter (show everything)
+
+         setDeliveries(filtered.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+      } else {
+         setDeliveries([]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar entregas', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDeliveries();
+  }, [filterStatus, dateRange]); // Reload when filters change
+
+  const onRefresh = () => {
+      setRefreshing(true);
+      loadDeliveries();
+  };
+
+  const handleDeliveryAction = async (sale: any) => {
+      console.log('Botão Ação Delivery Pressionado:', { id: sale.id, status: sale.status, delivery: sale.deliveryStatus });
+      
+      const statusNormalizado = String(sale.status || '').toLowerCase().trim();
+
+      // Scenario 1: Already Paid (Finalizada) -> Just mark as Delivered
+      if (statusNormalizado === 'finalizada' || statusNormalizado === 'pago') {
+          const confirmAction = async () => {
+              try {
+                setLoading(true);
+                await saleService.update(sale.id, { deliveryStatus: 'delivered' });
+                if (Platform.OS === 'web') {
+                    window.alert('Sucesso: Entrega confirmada!');
+                } else {
+                    Alert.alert('Sucesso', 'Entrega confirmada!');
+                }
+                loadDeliveries();
+              } catch (e) {
+                const msg = 'Falha ao confirmar entrega.';
+                if (Platform.OS === 'web') window.alert(msg);
+                else Alert.alert('Erro', msg);
+              } finally {
+                setLoading(false);
+              }
+          };
+
+          if (Platform.OS === 'web') {
+              if (window.confirm('Deseja marcar esta venda como entregue?')) {
+                  confirmAction();
+              }
+          } else {
+              Alert.alert(
+                  'Confirmar Entrega',
+                  'Deseja marcar esta venda como entregue?',
+                  [
+                      { text: 'Cancelar', style: 'cancel' },
+                      { text: 'Confirmar', onPress: confirmAction }
+                  ]
+              );
+          }
+          return;
+      }
+
+      // Scenario 2: Not Paid -> Open Payment Modal
+      console.log('Abrindo modal de pagamento para venda não finalizada');
+      setSelectedSale(sale);
+      setSplitModalVisible(true);
+  };
+
+  const openMaps = (address: string) => {
+      const url = Platform.select({
+          ios: `maps:0,0?q=${encodeURIComponent(address)}`,
+          android: `geo:0,0?q=${encodeURIComponent(address)}`,
+          web: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
+      });
+      if (url) {
+        Linking.openURL(url);
+      }
+  };
+
+  if (loading) {
+      return (
+          <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color="#2196F3" />
+          </View>
+      );
+  }
+
+  return (
+    <View style={styles.container}>
+
+        {/* <ScreenIdentifier screenName="Dashboard Delivery" /> */ }
+        <View style={styles.header}>
+            <TouchableOpacity 
+                onPress={() => {
+                    if (router.canGoBack()) router.back();
+                    else router.replace('/');
+                }} 
+                style={styles.backButton} 
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+                <Ionicons name="arrow-back" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Dashboard Delivery</Text>
+        </View>
+
+        {/* Filters */}
+        <View style={styles.filterContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity onPress={() => setDateRange('today')} style={[styles.filterChip, dateRange === 'today' && styles.filterChipActive]}>
+                    <Text style={[styles.filterText, dateRange === 'today' && styles.filterTextActive]}>Hoje</Text>
+                </TouchableOpacity>
+
+                
+                <View style={styles.divider} />
+                
+                <TouchableOpacity onPress={() => setFilterStatus('all')} style={[styles.filterChip, filterStatus === 'all' && styles.filterChipActive]}>
+                    <Text style={[styles.filterText, filterStatus === 'all' && styles.filterTextActive]}>Todos</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setFilterStatus('pending')} style={[styles.filterChip, filterStatus === 'pending' && styles.filterChipActive]}>
+                    <Text style={[styles.filterText, filterStatus === 'pending' && styles.filterTextActive]}>Pendentes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setFilterStatus('delivered')} style={[styles.filterChip, filterStatus === 'delivered' && styles.filterChipActive]}>
+                    <Text style={[styles.filterText, filterStatus === 'delivered' && styles.filterTextActive]}>Entregues</Text>
+                </TouchableOpacity>
+            </ScrollView>
+        </View>
+
+        <ScrollView 
+            contentContainerStyle={styles.list}
+            refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        >
+            {deliveries.length === 0 ? (
+                <View style={styles.emptyState}>
+                    <Ionicons name="bicycle-outline" size={64} color="#ccc" />
+                    <Text style={styles.emptyText}>Nenhuma entrega pendente.</Text>
+                </View>
+            ) : (
+                deliveries.map((sale) => (
+                    <View key={sale.id} style={styles.card}>
+
+
+                        <View style={styles.cardHeader}>
+                            <TouchableOpacity onPress={() => handleOpenReceipt(sale)}>
+                                <Text style={[styles.cardTitle, { textDecorationLine: 'underline', color: '#2196F3' }]}>
+                                    #{sale.id} - {sale.cliente?.nome || 'Cliente não ident.'}
+                                </Text>
+                            </TouchableOpacity>
+                            <View style={[styles.statusBadge, sale.deliveryStatus === 'delivered' ? { backgroundColor: '#4CAF50' } : (sale.status === 'finalizada' ? { backgroundColor: '#8BC34A' } : {})]}>
+                                <Text style={[styles.statusText, sale.deliveryStatus === 'delivered' ? { color: '#fff' } : (sale.status === 'finalizada' ? { color: '#fff' } : {})]}>
+                                    {sale.deliveryStatus === 'delivered' ? 'Entregue' : (sale.status === 'finalizada' ? 'Pendente (Pago)' : 'Pendente')}
+                                </Text>
+                            </View>
+                        </View>
+                        
+                        <Text style={styles.address} onPress={() => openMaps(sale.deliveryAddress)}>
+                            <Ionicons name="location" size={14} color="#2196F3" /> {sale.deliveryAddress || 'Sem endereço'}
+                        </Text>
+                        
+                        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8 }}>
+                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                 <Ionicons name="bicycle" size={14} color="#666" /> 
+                                 <Text style={{ fontSize: 12, color: '#555', marginLeft: 4 }}>
+                                     {sale.entregador?.nome || 'Sem entregador'}
+                                 </Text>
+                             </View>
+                             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                 <Ionicons name="id-card" size={14} color="#666" /> 
+                                 <Text style={{ fontSize: 12, color: '#555', marginLeft: 4 }}>
+                                     {sale.funcionario?.nome || 'Atendente'}
+                                 </Text>
+                             </View>
+                        </View>
+
+                        <View style={styles.infoRow}>
+                            {/* Calculate values with client-side fallback if DB is 0 */}
+                            {(() => {
+                                const subtotal = Number(sale.subtotal) || (sale.itens || []).reduce((acc: number, i: any) => acc + (Number(i.subtotal) || (Number(i.precoUnitario || 0) * Number(i.quantidade || 1))), 0);
+                                const taxa = Number(sale.deliveryFee) || 0;
+                                const calcTotal = subtotal + taxa - Number(sale.desconto || 0);
+                                const total = calcTotal > 0 ? calcTotal : (Number(sale.total) || 0);
+                                
+                                return (
+                                    <View style={{ width: '100%' }}>
+                                        <Text style={styles.infoText}>Distância: {sale.deliveryDistance} km</Text>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
+                                            <Text style={styles.infoText}>Produtos:</Text>
+                                            <Text style={styles.infoText}>R$ {subtotal.toFixed(2)}</Text>
+                                        </View>
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 2 }}>
+                                            <Text style={styles.infoText}>Taxa Entrega:</Text>
+                                            <Text style={styles.infoText}>+ R$ {taxa.toFixed(2)}</Text>
+                                        </View>
+                                        <View style={{ height: 1, backgroundColor: '#eee', marginVertical: 4 }} />
+                                        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                            <Text style={styles.totalText}>TOTAL:</Text>
+                                            <Text style={styles.totalText}>R$ {total.toFixed(2)}</Text>
+                                        </View>
+                                    </View>
+                                );
+                            })()}
+                        </View>
+
+                        {/* Status de Pagamento Explícito */}
+                        <View style={{ marginBottom: 12, flexDirection: 'row', justifyContent: 'flex-end' }}>
+                             {(sale.status === 'finalizada' || sale.status === 'pago') ? (
+                                 <View style={{ backgroundColor: '#E8F5E9', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#4CAF50' }}>
+                                     <Text style={{ color: '#2E7D32', fontWeight: 'bold', fontSize: 12 }}>✅ PAGO</Text>
+                                 </View>
+                             ) : (
+                                 <View style={{ backgroundColor: '#FFEBEE', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#EF5350' }}>
+                                     <Text style={{ color: '#C62828', fontWeight: 'bold', fontSize: 12 }}>⚠️ A PAGAR</Text>
+                                 </View>
+                             )}
+                        </View>
+
+                        <View style={styles.actions}>
+                             {(sale.deliveryStatus !== 'delivered') && (
+                             <TouchableOpacity 
+                                onPress={() => handleDeliveryAction(sale)} 
+                                style={styles.confirmButton}
+                             >
+                                 <Ionicons name={sale.status === 'finalizada' ? "checkmark-circle" : "cash"} size={20} color="#fff" />
+                                 <Text style={styles.buttonText}>
+                                     {sale.status === 'finalizada' ? 'Confirmar Entrega' : 'Confirmar / Pagar'}
+                                 </Text>
+                             </TouchableOpacity>
+                             )}
+                        </View>
+                    </View>
+                ))
+            )}
+        </ScrollView>
+
+        <PaymentSplitModal
+            visible={splitModalVisible}
+            sale={selectedSale}
+            onClose={() => setSplitModalVisible(false)}
+            onPaymentSuccess={async (isFull, wantNfce) => {
+                // Se pagou tudo (ou confirmou fechamento), marcamos como entregue automaticamente
+                if (selectedSale) {
+                    try {
+                        const updates: any = { deliveryStatus: 'delivered' };
+                        // Se não estava finalizada, finaliza (geralmente o paymentSplit já lida com pagamentos, 
+                        // mas se o usuário clicou explicito em Finalizar, guaranteed)
+                        if (isFull) updates.status = 'finalizada';
+
+                        await saleService.update(selectedSale.id, updates);
+                        
+                        setSplitModalVisible(false);
+
+                        // Lógica de Emissão de NFC-e
+                        if (wantNfce) {
+                            // Em vez de Alert bloqueante, usamos loading visual
+                            setLoading(true); 
+                            
+                            try {
+                                const nfceResult = await NfceService.emitir(selectedSale.id);
+                                console.log('[NFC-e] Emitida na Entrega:', nfceResult);
+
+                                if (nfceResult.success) {
+                                     // Abrir PDF
+                                    if (Platform.OS === 'web') {
+                                        window.alert('✅ Entrega Confirmada e NFC-e Emitida com SUCESSO!');
+                                        window.open(nfceResult.pdfUrl, '_blank');
+                                    } else {
+                                        Alert.alert(
+                                            '✅ Sucesso!',
+                                            'Entrega Confirmada e NFC-e Emitida!',
+                                            [
+                                                { text: 'Abrir PDF', onPress: () => Linking.openURL(nfceResult.pdfUrl) },
+                                                { text: 'OK' }
+                                            ]
+                                        );
+                                    }
+                                } else {
+                                    // Erro (Rejeitada)
+                                    const errMsg = `Entrega SALVA, mas houve erro na NFC-e: ${nfceResult.message || nfceResult.error}`;
+                                    if(Platform.OS === 'web') window.alert('⚠️ ' + errMsg);
+                                    else Alert.alert('⚠️ Atenção', errMsg);
+                                }
+                            } catch (error: any) {
+                                console.error('[NFC-e] Erro:', error);
+                                const errMsg = `Entrega SALVA, mas falha ao emitir NFC-e: ${error.message || error}`;
+                                if(Platform.OS === 'web') window.alert('⚠️ ' + errMsg);
+                                else Alert.alert('⚠️ Erro NFC-e', errMsg);
+                            } finally {
+                                setLoading(false);
+                            }
+                        } else {
+                            // Sem NFC-e
+                            if(Platform.OS === 'web') {
+                                window.alert('Sucesso: Entrega e Pagamento confirmados!');
+                            } else {
+                                Alert.alert('Sucesso', 'Entrega e Pagamento confirmados!');
+                            }
+                            setLoading(false); // Garante que loading some se estava true
+                        }
+
+
+                        loadDeliveries(); // Recarrega lista
+                        
+                    } catch (e) {
+                        console.error(e);
+                        Alert.alert('Erro', 'Pagamento registrado, mas erro ao atualizar status da entrega.');
+                    }
+                }
+            }}
+        />
+
+        <ReceiptModal 
+            visible={receiptModalVisible} 
+            sale={selectedReceiptSale}
+            onClose={() => setReceiptModalVisible(false)}
+        />
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+    container: { flex: 1, backgroundColor: '#f5f5f5' },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+    header: { 
+      paddingTop: 50, 
+      paddingBottom: 20, 
+      paddingHorizontal: 20, 
+      backgroundColor: '#2196F3', 
+      flexDirection: 'row', 
+      alignItems: 'center' 
+    },
+    headerTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginLeft: 10 },
+    backButton: { padding: 4 },
+    list: { padding: 16 },
+    emptyState: { alignItems: 'center', marginTop: 100 },
+    emptyText: { color: '#888', marginTop: 16, fontSize: 16 },
+    
+    card: {
+        backgroundColor: '#fff',
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 16,
+        elevation: 2,
+    },
+    cardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
+    cardTitle: { fontSize: 16, fontWeight: 'bold' },
+    statusBadge: { backgroundColor: '#FFEB3B', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, fontSize: 12, fontWeight: 'bold' },
+    address: { color: '#2196F3', marginBottom: 12, fontSize: 14 },
+    infoRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+    infoText: { color: '#666', fontSize: 12 },
+    totalText: { fontSize: 14, fontWeight: 'bold', color: '#2e7d32' },
+    
+    actions: { flexDirection: 'row', justifyContent: 'flex-end' },
+    confirmButton: { 
+        backgroundColor: '#4CAF50', 
+        flexDirection: 'row', 
+        paddingHorizontal: 16, 
+        paddingVertical: 10, 
+        borderRadius: 8, 
+        alignItems: 'center',
+        gap: 8
+    },
+    buttonText: { color: '#fff', fontWeight: 'bold' },
+    
+    // Filters
+    filterContainer: { backgroundColor: '#fff', paddingVertical: 10, paddingHorizontal: 16 },
+    filterChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, backgroundColor: '#f0f0f0', marginRight: 8 },
+    filterChipActive: { backgroundColor: '#2196F3' },
+    filterText: { color: '#666', fontSize: 13 },
+    filterTextActive: { color: '#fff', fontWeight: 'bold' },
+    divider: { width: 1, backgroundColor: '#ddd', marginHorizontal: 8, height: '80%' },
+    statusText: { fontSize: 12, fontWeight: 'bold' }
+});
