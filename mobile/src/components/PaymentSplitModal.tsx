@@ -553,53 +553,26 @@ export default function PaymentSplitModal({
   const handleConfirm = async () => {
     if (!sale) return;
     
-    // Verificar se esta ação vai FINALIZAR a venda (tudo pago)
-    // Cenário 1: Já está tudo pago (isEverythingPaid=true) -> Finaliza agora.
-    // Cenário 2: Vai pagar o restante agora (totalSelected >= totalRemainingGlobal) -> Finaliza agora.
-    
+    // A pedido do usuário: REGRA SIMPLES.
+    // Se clicou em confirmar pagamento e "Emitir NFC-e" está marcado, 
+    // apenas abra a modal de fiscal (que é controlada pelo pai através do onPaymentSuccess).
+    if (emitirNfce) {
+        // Envia isFullPayment=true e wantNfce=true para forçar o pai a abrir a modal
+        onPaymentSuccess(true, true, pointsToUse);
+        return;
+    }
+
+    // Se NÃO for emitir NFC-e, segue o fluxo normal de pagamento
     const isEverythingPaid = totalRemainingGlobal <= 0.05;
     const isPayingRest = (totalSelected >= totalRemainingGlobal - 0.05);
-    
     const willFinalize = isEverythingPaid || isPayingRest;
 
-    // Se vai finalizar E quer NFC-e, checa os dados fiscais ANTES do modal de CPF
-    if (willFinalize && emitirNfce) {
-        let hasMissingFiscalData = false;
-        
-        // Simples verificação se algum item está sem NCM, CFOP ou CSOSN
-        if (sale.itens && Array.isArray(sale.itens)) {
-            for (const item of sale.itens) {
-                const p = item.produto as any;
-                const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                
-                if (!isPopulated || !p.ncm || !p.cfop || !p.csosn) {
-                    hasMissingFiscalData = true;
-                    break;
-                }
-            }
-        }
-
-        if (hasMissingFiscalData) {
-             // Se falta dado fiscal, vamos fechar o modal atual via onPaymentSuccess 
-             // Mas sinalizando que precisa abrir o de validação fiscal.
-             // Como a lógica atual do Pai (sale.tsx) lida com a checagem no retorno do modal,
-             // o melhor é executar onPaymentSuccess(true, true, pointsToUse) direto,
-             // deixando o pai abrir a validação fiscal e só dps perguntar o CPF (no fluxo pai).
-             
-             // Por instrução: "checado logo quando confirma o fechamento e nao quando pergunta o cpf".
-             // Então retornamos pro pai cuidar disso imediatamente.
-             onPaymentSuccess(true, true, pointsToUse);
-             return;
-        }
-
-
-        // Armazena a ação real para executar apos o modal
+    if (willFinalize) {
         setPendingConfirmAction(() => executeConfirmLogic);
         setCpfModalVisible(true);
         return;
     }
 
-    // Se não for finalizar ou não quiser NFC-e, segue direto
     executeConfirmLogic();
   };
 

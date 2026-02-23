@@ -213,3 +213,45 @@
 [2026-02-23T19:44:55.063Z] [EmitirNfce] Delivery Fee: null
 [2026-02-23T19:44:55.064Z] [EmitirNfce] Total Venda: 13
 [2026-02-23T19:44:55.064Z] [EmitirNfce] Subtotal: 13
+[2026-02-23T21:26:40.823Z] [Controller] emitirNfce. Body: {"saleId":495}
+[2026-02-23T21:26:40.841Z] [EmitirNfce] Sale ID: 495
+[2026-02-23T21:26:40.842Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T21:26:40.842Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T21:26:40.842Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T21:26:40.842Z] [EmitirNfce] Subtotal: 0
+[2026-02-23T21:28:25.385Z] [Controller] emitirNfce. Body: {"saleId":496}
+[2026-02-23T21:28:25.444Z] [EmitirNfce] Sale ID: 496
+[2026-02-23T21:28:25.444Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T21:28:25.444Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T21:28:25.444Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T21:28:25.444Z] [EmitirNfce] Subtotal: 0
+[2026-02-23T21:33:57.332Z] [Controller] emitirNfce. Body: {"saleId":497}
+[2026-02-23T21:33:57.346Z] [EmitirNfce] Sale ID: 497
+[2026-02-23T21:33:57.347Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T21:33:57.347Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T21:33:57.347Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T21:33:57.347Z] [EmitirNfce] Subtotal: 0
+[2026-02-23T21:34:32.037Z] [Controller] emitirNfce. Body: {"saleId":498}
+[2026-02-23T21:34:32.054Z] [EmitirNfce] Sale ID: 498
+[2026-02-23T21:34:32.054Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T21:34:32.056Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T21:34:32.056Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T21:34:32.056Z] [EmitirNfce] Subtotal: 0
+[2026-02-23T21:39:07.091Z] [Controller] emitirNfce. Body: {"saleId":499}
+[2026-02-23T21:39:07.106Z] [EmitirNfce] Sale ID: 499
+[2026-02-23T21:39:07.107Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T21:39:07.107Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T21:39:07.107Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T21:39:07.107Z] [EmitirNfce] Subtotal: 0
+[2026-02-23T21:40:18.589Z] [Controller] emitirNfce. Body: {"saleId":501}
+[2026-02-23T21:40:18.623Z] [EmitirNfce] Sale ID: 501
+[2026-02-23T21:40:18.623Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T21:40:18.624Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T21:40:18.624Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T21:40:18.624Z] [EmitirNfce] Subtotal: 0
+[2026-02-23T22:04:10.568Z] [Controller] emitirNfce. Body: {"saleId":503}
+[2026-02-23T22:04:10.613Z] [EmitirNfce] Sale ID: 503
+[2026-02-23T22:04:10.614Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T22:04:10.616Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-23T22:04:10.616Z] [EmitirNfce] Total Venda: 4
+[2026-02-23T22:04:10.617Z] [EmitirNfce] Subtotal: 0

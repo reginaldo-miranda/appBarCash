@@ -108,6 +108,18 @@ export default function FiscalDataValidationModal({
         Alert.alert('Atenção', `Preencha todos os campos fiscais para o produto: ${p.nomeProduto}`);
         return;
       }
+      if (data.ncm.replace(/\D/g, '').length !== 8) {
+        Alert.alert('Atenção', `O NCM do produto ${p.nomeProduto} deve ter exatamente 8 dígitos.`);
+        return;
+      }
+      if (data.cfop.replace(/\D/g, '').length !== 4) {
+        Alert.alert('Atenção', `O CFOP do produto ${p.nomeProduto} deve ter exatamente 4 dígitos.`);
+        return;
+      }
+      if (data.csosn.replace(/\D/g, '').length !== 3) {
+        Alert.alert('Atenção', `O CSOSN do produto ${p.nomeProduto} deve ter exatamente 3 dígitos.`);
+        return;
+      }
     }
 
     setLoading(true);

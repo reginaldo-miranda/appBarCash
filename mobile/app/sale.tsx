@@ -2115,7 +2115,8 @@ export default function SaleScreen() {
             setFiscalModalVisible(false);
             setMissingFiscalProducts([]);
             
-            // Atualiza o snapshot da venda local e na API para que a emissão NFC-e use os dados preenchidos
+            // Aqui é CRÍTICO: atualizamos os PRODUTOS fisicamente na base de dados
+            // Garantindo que a emissão da NFC-e que acontece depois leia os NCMs corretos
             if (sale && updatedFiscalData) {
                 const saleId = (sale as any).id || (sale as any)._id;
                 let hasChanges = false;
@@ -2149,12 +2150,21 @@ export default function SaleScreen() {
                 
                 if (hasChanges) {
                     try {
-                        console.log('Salvando dados fiscais preenchidos na venda...');
-                        await saleService.update(saleId, { itens: updatedItens });
-                        // Atualiza o estado local para garantir que a NFC-e (que pode usar o estado) veja os dados novos
+                        console.log('Forçando salvamento no banco relacional dos dados ficias...');
+                        // Best Effort: já foi salvo na modal, mas vamos garantir local aqui
                         setSale({...sale, itens: updatedItens} as any);
+                        
+                        // Também chamamos a api para forçar no cadastro real do produto (caso a modal tenha falhado)
+                        const promises = Object.keys(updatedFiscalData).map(pid => {
+                            const payload = updatedFiscalData[pid];
+                            return api.put(`/product/update/${pid}`, payload);
+                        });
+                        await Promise.allSettled(promises);
+                        // Aguarda pequeno tempo pro banco sincronizar
+                        await new Promise(r => setTimeout(r, 800));
+                        
                     } catch (e) {
-                        console.error('Erro ao salvar os itens atualizados na venda:', e);
+                        console.error('Erro ao garantir updates fiscais:', e);
                     }
                 }
             }
