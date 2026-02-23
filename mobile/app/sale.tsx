@@ -41,6 +41,8 @@ import NfceService from '../src/services/NfceService';
 import PixModal from '../src/components/PixModal';
 import PaymentPromptModal from '../src/components/PaymentPromptModal';
 import CashbackPromptModal from '../src/components/CashbackPromptModal';
+import FiscalDataValidationModal from '../src/components/FiscalDataValidationModal';
+import CpfModal from '../src/components/CpfModal';
 import { calculateRemainingItemsPayload } from '../src/utils/paymentHelpers';
 import { printHtmlContent } from '../src/utils/printHtml';
 
@@ -153,6 +155,12 @@ export default function SaleScreen() {
   const [cashbackPromptVisible, setCashbackPromptVisible] = useState(false);
   const [afterCashbackAction, setAfterCashbackAction] = useState<'modal' | 'split'>('modal');
   const [pixModalVisible, setPixModalVisible] = useState(false);
+
+  // Fiscal Validation Modal State
+  const [fiscalModalVisible, setFiscalModalVisible] = useState(false);
+  const [missingFiscalProducts, setMissingFiscalProducts] = useState<any[]>([]);
+  const [pendingNfcePontos, setPendingNfcePontos] = useState<number | undefined>();
+  const [cpfModalVisible, setCpfModalVisible] = useState(false);
 
 
   // API Key for Maps
@@ -1338,6 +1346,17 @@ export default function SaleScreen() {
     }
   };
 
+  const continueFinalizationWithNfce = async (pontosUsados?: number) => {
+    // 1. Finalize the sale without navigating away so we can show the NFC-e modal
+    const success = await finalizeSale({ skipNavigation: true, pontosUsados });
+    
+    // 2. Transmit NFC-e to SEFAZ
+    if (success && sale) {
+       const saleId = (sale as any).id || (sale as any)._id;
+       handleEmitNfce(saleId);
+    }
+  };
+
   const handlePrintReceipt = async () => {
     if (!sale) return;
     try {
@@ -1997,7 +2016,7 @@ export default function SaleScreen() {
             
             {totalRemaining > 0.05 && (
                 <Text style={{ textAlign: 'center', color: '#F44336', marginBottom: 10, width: '100%' }}>
-                  Para finalizar, o saldo deve ser zero. Clique em "Pagar & Finalizar" para quitar o restante agora.
+                  Para finalizar, o saldo deve ser zero. Clique em &quot;Pagar &amp; Finalizar&quot; para quitar o restante agora.
                 </Text>
             )}
 
@@ -2084,6 +2103,118 @@ export default function SaleScreen() {
       </Modal>
 
 
+      <FiscalDataValidationModal
+        visible={fiscalModalVisible}
+        products={missingFiscalProducts}
+        onCancel={() => {
+            setFiscalModalVisible(false);
+            setMissingFiscalProducts([]);
+            console.log('NFC-e cancelada por falta de dados fiscais.');
+        }}
+        onSuccess={async (updatedFiscalData) => {
+            setFiscalModalVisible(false);
+            setMissingFiscalProducts([]);
+            
+            // Atualiza o snapshot da venda local e na API para que a emissão NFC-e use os dados preenchidos
+            if (sale && updatedFiscalData) {
+                const saleId = (sale as any).id || (sale as any)._id;
+                let hasChanges = false;
+                
+                const updatedItens = sale.itens.map(item => {
+                    const p = item.produto as any;
+                    const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
+                    const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                    
+                    const fiscalInfo = updatedFiscalData[pid];
+                    
+                    if (fiscalInfo) {
+                       hasChanges = true;
+                       return {
+                          ...item,
+                          produto: isPopulated ? {
+                              ...p,
+                              ncm: fiscalInfo.ncm,
+                              cfop: fiscalInfo.cfop,
+                              csosn: fiscalInfo.csosn
+                          } : {
+                              _id: pid,
+                              ncm: fiscalInfo.ncm,
+                              cfop: fiscalInfo.cfop,
+                              csosn: fiscalInfo.csosn
+                          }
+                       };
+                    }
+                    return item;
+                });
+                
+                if (hasChanges) {
+                    try {
+                        console.log('Salvando dados fiscais preenchidos na venda...');
+                        await saleService.update(saleId, { itens: updatedItens });
+                        // Atualiza o estado local para garantir que a NFC-e (que pode usar o estado) veja os dados novos
+                        setSale({...sale, itens: updatedItens} as any);
+                    } catch (e) {
+                        console.error('Erro ao salvar os itens atualizados na venda:', e);
+                    }
+                }
+            }
+
+            Alert.alert('Sucesso', 'Dados fiscais recebidos. Continuando com a emissão...');
+            // Ao invés de ir direto pro NFC-e, abre o modal de CPF
+            setCpfModalVisible(true);
+        }}
+      />
+
+      <CpfModal
+        visible={cpfModalVisible}
+        onClose={() => {
+            setCpfModalVisible(false);
+            // Se fechou sem informar CPF, finalizamos sem CPF.
+            continueFinalizationWithNfce(pendingNfcePontos);
+        }}
+        onConfirm={async (data) => {
+            setCpfModalVisible(false);
+            setLoading(true);
+            try {
+                let currentClienteId = (sale as any)?.clienteId;
+                
+                // Tratar CPF. Pode vir cliente novo, ou já existente.
+                // Reutilizamos a lógica similar do PaymentSplitModal, ou fazemos uma simples:
+                if (data.id) {
+                    currentClienteId = data.id;
+                    await customerService.update(data.id, { nome: data.nome, endereco: data.endereco, cpf: data.cpf });
+                } else if (data.cpf && data.cpf.replace(/\D/g, '').length >= 11) {
+                    try {
+                        const createRes = await customerService.create({
+                            nome: data.nome,
+                            endereco: data.endereco,
+                            cpf: data.cpf,
+                            ativo: true
+                        });
+                        currentClienteId = createRes.data?.customer?.id || createRes.data?.id;
+                    } catch (e: any) {
+                        // Se já existir, tentamos buscar
+                        if (e.response?.data?.error === 'CPF já cadastrado' || String(e).includes('CPF')) {
+                            const cpfRaw = data.cpf.replace(/\D/g, '');
+                            const searchRes = await customerService.getByCpf(cpfRaw);
+                            if (searchRes.data?.id) currentClienteId = searchRes.data.id;
+                        }
+                    }
+                }
+                
+                if (currentClienteId && sale) {
+                    const saleId = (sale as any).id || (sale as any)._id;
+                    await saleService.update(saleId, { clienteId: currentClienteId });
+                }
+            } catch (err) {
+                console.error("Erro vinculando CPF no CpfModal:", err);
+            } finally {
+                setLoading(false);
+                continueFinalizationWithNfce(pendingNfcePontos);
+            }
+        }}
+      />
+
       <PaymentSplitModal
         visible={splitModalVisible}
         sale={sale}
@@ -2102,31 +2233,37 @@ export default function SaleScreen() {
              setSplitModalVisible(false);
              
              if (wantNfce && sale) {
-                 // Se vai emitir NFC-e, NÃO navega de volta ainda. O modal de NFC-e fará isso ao fechar.
-                 finalizeSale({ silent: true, skipNavigation: true, pontosUsados }).then((success) => {
-                    if (!success) {
-                        console.log('❌ Finalização falhou, cancelando NFC-e');
-                        return;
-                    }
-                    const sid = String((sale as any).id || (sale as any)._id);
-                    // Pequeno delay para garantir que o modal split fechou e estado limpou
-                    setTimeout(() => {
-                        handleEmitNfce(sid).then(() => {
-                            // SE FOR DELIVERY, imprimimos o cupom de entrega APÓS a tentativa de NFC-e
-                            if (isDelivery) {
-                                // Pequeno delay e imprime
-                                setTimeout(async () => {
-                                    try {
-                                        const printRes = await api.post(`/sale/${sid}/delivery-print`);
-                                        if (printRes.data && printRes.data.content) {
-                                            printHtmlContent(printRes.data.content);
-                                        }
-                                    } catch(e) { console.error('Erro delivery print pos-nfce', e); }
-                                }, 1000);
-                            }
-                        });
-                    }, 200);
-                 });
+                 const missingProducts: any[] = [];
+                 if (sale.itens && Array.isArray(sale.itens)) {
+                     sale.itens.forEach(item => {
+                         const p = item.produto as any;
+                         const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
+                         const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                         
+                         // Se falto dado fiscal ou se o produto eh so string (indicando q nao populou e precisamos buscar os dados)
+                         if (!isPopulated || !p.ncm || !p.cfop || !p.csosn) {
+                             missingProducts.push({
+                                 _id: item._id || (item as any).id,
+                                 productId: pid,
+                                 nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
+                                 ncm: isPopulated ? p.ncm : undefined,
+                                 cfop: isPopulated ? p.cfop : undefined,
+                                 csosn: isPopulated ? p.csosn : undefined
+                             });
+                         }
+                     });
+                 }
+
+                 if (missingProducts.length > 0) {
+                     setMissingFiscalProducts(missingProducts);
+                     setPendingNfcePontos(pontosUsados);
+                     // Adicionando um pequeno atraso para permitir que o PaymentSplitModal feche completamente antes de abrir a nova modal (evita travamento no mobile)
+                     setTimeout(() => {
+                         setFiscalModalVisible(true);
+                     }, 400);
+                 } else {
+                     continueFinalizationWithNfce(pontosUsados);
+                 }
              } else {
                  // Comportamento padrão: finaliza e volta
                  finalizeSale({ silent: true, pontosUsados });
@@ -2179,14 +2316,14 @@ export default function SaleScreen() {
                                }}
                            >
                                <Ionicons name="person-add" size={20} color="#2196F3" style={{ marginRight: 8 }} />
-                               <Text style={{ color: '#2196F3', fontWeight: 'bold' }}>Cadastrar Completo: "{searchClientQuery}"</Text>
+                               <Text style={{ color: '#2196F3', fontWeight: 'bold' }}>Cadastrar Completo: &quot;{searchClientQuery}&quot;</Text>
                            </TouchableOpacity>
 
                            <TouchableOpacity style={{ padding: 12, backgroundColor: '#FFF3E0', borderRadius: 8, marginBottom: 10, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
                                onPress={() => handleUseNameOnly(searchClientQuery)}
                            >
                                <Ionicons name="text" size={20} color="#FF9800" style={{ marginRight: 8 }} />
-                               <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>Usar Apenas Nome: "{searchClientQuery}"</Text>
+                               <Text style={{ color: '#FF9800', fontWeight: 'bold' }}>Usar Apenas Nome: &quot;{searchClientQuery}&quot;</Text>
                            </TouchableOpacity>
                        </View>
                   )}

@@ -12,6 +12,7 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import api, { saleService } from '../../src/services/api';
 import { printHtmlContent } from '../../src/utils/printHtml';
@@ -64,10 +65,8 @@ export default function HistoricoScreen() {
 
   const loadSales = async () => {
     try {
-      const response = await saleService.getAll();
-      const finishedSales = response.data.filter((sale: Sale) => 
-        sale.status === 'finalizada' || sale.status === 'cancelada'
-      );
+      const response = await saleService.list({ status: 'finalizada,cancelada' });
+      const finishedSales = response.data;
       setSales(finishedSales);
       applyFilters(finishedSales, typeFilter, dateFilter, searchText);
     } catch (error: any) {
@@ -84,9 +83,11 @@ export default function HistoricoScreen() {
     setRefreshing(false);
   };
 
-  useEffect(() => {
-    loadSales();
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      loadSales();
+    }, [])
+  );
 
   useEffect(() => {
     applyFilters(sales, typeFilter, dateFilter, searchText);

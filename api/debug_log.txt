@@ -124,3 +124,92 @@
 [2026-02-19T20:16:52.200Z] [EmitirNfce] Delivery Fee: null
 [2026-02-19T20:16:52.201Z] [EmitirNfce] Total Venda: 13
 [2026-02-19T20:16:52.202Z] [EmitirNfce] Subtotal: 13
+[2026-02-20T13:34:52.046Z] [Controller] emitirNfce. Body: {"saleId":"431"}
+[2026-02-20T13:34:52.072Z] [EmitirNfce] Sale ID: 431
+[2026-02-20T13:34:52.073Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-20T13:34:52.073Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-20T13:34:52.073Z] [EmitirNfce] Total Venda: 4
+[2026-02-20T13:34:52.073Z] [EmitirNfce] Subtotal: 0
+[2026-02-20T13:35:07.115Z] [Controller] emitirNfce. Body: {"saleId":"431"}
+[2026-02-20T13:35:07.136Z] [EmitirNfce] Sale ID: 431
+[2026-02-20T13:35:07.137Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-20T13:35:07.137Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-20T13:35:07.137Z] [EmitirNfce] Total Venda: 4
+[2026-02-20T13:35:07.137Z] [EmitirNfce] Subtotal: 0
+[2026-02-20T13:35:22.425Z] [Controller] emitirNfce. Body: {"saleId":"431"}
+[2026-02-20T13:35:22.541Z] [EmitirNfce] Sale ID: 431
+[2026-02-20T13:35:22.541Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-20T13:35:22.543Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-20T13:35:22.544Z] [EmitirNfce] Total Venda: 4
+[2026-02-20T13:35:22.544Z] [EmitirNfce] Subtotal: 0
+[2026-02-20T13:35:36.067Z] [Controller] emitirNfce. Body: {"saleId":"431"}
+[2026-02-20T13:35:36.091Z] [EmitirNfce] Sale ID: 431
+[2026-02-20T13:35:36.092Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-20T13:35:36.092Z] [EmitirNfce] Delivery Fee: 4
+[2026-02-20T13:35:36.092Z] [EmitirNfce] Total Venda: 4
+[2026-02-20T13:35:36.093Z] [EmitirNfce] Subtotal: 0
+[2026-02-20T13:37:24.428Z] [Finalize] ID: 430 (Int: 430). FreshItens: 2, FreshCV: 1
+[2026-02-20T13:37:24.429Z] [Finalize] Recalculated Subtotal: 103
+[2026-02-20T13:37:24.462Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T13:37:24.464Z] [DEBUG] CV: 336 - dinheiro - 103
+[2026-02-20T13:37:24.464Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T14:00:36.409Z] [Finalize] ID: 432 (Int: 432). FreshItens: 1, FreshCV: 1
+[2026-02-20T14:00:36.417Z] [Finalize] Recalculated Subtotal: 12.34
+[2026-02-20T14:00:36.469Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T14:00:36.477Z] [DEBUG] CV: 337 - dinheiro - 12.34
+[2026-02-20T14:00:36.477Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T14:28:44.992Z] [Finalize] ID: 433 (Int: 433). FreshItens: 1, FreshCV: 1
+[2026-02-20T14:28:44.993Z] [Finalize] Recalculated Subtotal: 12.34
+[2026-02-20T14:28:45.040Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T14:28:45.040Z] [DEBUG] CV: 338 - dinheiro - 12.34
+[2026-02-20T14:28:45.041Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T14:29:32.176Z] [Finalize] ID: 426 (Int: 426). FreshItens: 2, FreshCV: 1
+[2026-02-20T14:29:32.176Z] [Finalize] Recalculated Subtotal: 95
+[2026-02-20T14:29:32.203Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T14:29:32.204Z] [DEBUG] CV: 339 - dinheiro - 95
+[2026-02-20T14:29:32.204Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T18:25:10.714Z] [Finalize] ID: 434 (Int: 434). FreshItens: 1, FreshCV: 1
+[2026-02-20T18:25:10.717Z] [Finalize] Recalculated Subtotal: 12.34
+[2026-02-20T18:25:10.760Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T18:25:10.760Z] [DEBUG] CV: 340 - dinheiro - 12.34
+[2026-02-20T18:25:10.760Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T18:25:53.234Z] [Finalize] ID: 435 (Int: 435). FreshItens: 1, FreshCV: 1
+[2026-02-20T18:25:53.238Z] [Finalize] Recalculated Subtotal: 12.34
+[2026-02-20T18:25:53.265Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T18:25:53.265Z] [DEBUG] CV: 341 - dinheiro - 12.34
+[2026-02-20T18:25:53.265Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T18:26:24.436Z] [Finalize] ID: 436 (Int: 436). FreshItens: 1, FreshCV: 1
+[2026-02-20T18:26:24.462Z] [Finalize] Recalculated Subtotal: 12.34
+[2026-02-20T18:26:24.891Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T18:26:24.891Z] [DEBUG] CV: 342 - dinheiro - 12.34
+[2026-02-20T18:26:24.891Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T19:59:09.721Z] [Finalize] ID: 441 (Int: 441). FreshItens: 1, FreshCV: 1
+[2026-02-20T19:59:09.722Z] [Finalize] Recalculated Subtotal: 13
+[2026-02-20T19:59:09.767Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T19:59:09.768Z] [DEBUG] CV: 346 - dinheiro - 13
+[2026-02-20T19:59:09.768Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-20T20:01:31.700Z] [Finalize] ID: 443 (Int: 443). FreshItens: 1, FreshCV: 1
+[2026-02-20T20:01:31.701Z] [Finalize] Recalculated Subtotal: 13
+[2026-02-20T20:01:31.733Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-02-20T20:01:31.733Z] [DEBUG] CV: 347 - dinheiro - 13
+[2026-02-20T20:01:31.734Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-23T19:42:58.186Z] [Finalize] ID: 472 (Int: 472). FreshItens: 1, FreshCV: 0
+[2026-02-23T19:42:58.188Z] [Finalize] Recalculated Subtotal: 13
+[2026-02-23T19:42:58.217Z] [DEBUG] Finalize - FreshCV Count: 0
+[2026-02-23T19:42:58.218Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-23T19:42:58.354Z] [Controller] emitirNfce. Body: {"saleId":472}
+[2026-02-23T19:42:58.382Z] [EmitirNfce] Sale ID: 472
+[2026-02-23T19:42:58.384Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T19:42:58.384Z] [EmitirNfce] Delivery Fee: null
+[2026-02-23T19:42:58.384Z] [EmitirNfce] Total Venda: 13
+[2026-02-23T19:42:58.384Z] [EmitirNfce] Subtotal: 13
+[2026-02-23T19:44:54.821Z] [Finalize] ID: 473 (Int: 473). FreshItens: 1, FreshCV: 0
+[2026-02-23T19:44:54.822Z] [Finalize] Recalculated Subtotal: 13
+[2026-02-23T19:44:54.874Z] [DEBUG] Finalize - FreshCV Count: 0
+[2026-02-23T19:44:54.876Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-02-23T19:44:55.031Z] [Controller] emitirNfce. Body: {"saleId":473}
+[2026-02-23T19:44:55.063Z] [EmitirNfce] Sale ID: 473
+[2026-02-23T19:44:55.063Z] [EmitirNfce] Cashback Usado: 0
+[2026-02-23T19:44:55.063Z] [EmitirNfce] Delivery Fee: null
+[2026-02-23T19:44:55.064Z] [EmitirNfce] Total Venda: 13
+[2026-02-23T19:44:55.064Z] [EmitirNfce] Subtotal: 13

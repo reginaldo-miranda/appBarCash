@@ -347,7 +347,7 @@ router.get('/open-min', async (req, res) => {
         itens: { select: { quantidade: true, precoUnitario: true, subtotal: true } },
       },
       orderBy: { dataVenda: 'desc' },
-      take: 100,
+      take: 500,
     });
     // agregar total e itensCount
     const results = vendas.map(v => {
@@ -381,7 +381,13 @@ router.get('/list', async (req, res) => {
     const { status, funcionario, cliente, dataInicio, dataFim, isDelivery } = req.query;
     const where = {};
 
-    if (status) where.status = String(status);
+    if (status) {
+      if (status.includes(',')) {
+        where.status = { in: status.split(',') };
+      } else {
+        where.status = String(status);
+      }
+    }
     if (funcionario) where.funcionarioId = Number(funcionario);
     if (cliente) where.clienteId = Number(cliente);
     if (isDelivery !== undefined) where.isDelivery = isDelivery === 'true';
@@ -403,7 +409,7 @@ router.get('/list', async (req, res) => {
         caixaVendas: true,
       },
       orderBy: { dataVenda: 'desc' },
-      take: 100,
+      take: 500,
     });
 
     res.json(mapSales(normalizeSales(vendas)));
@@ -1372,7 +1378,13 @@ router.get('/', async (req, res) => {
     const { status, funcionario, cliente, dataInicio, dataFim, isDelivery } = req.query;
     const where = {};
 
-    if (status) where.status = String(status);
+    if (status) {
+      if (status.includes(',')) {
+        where.status = { in: status.split(',') };
+      } else {
+        where.status = String(status);
+      }
+    }
     if (funcionario) where.funcionarioId = Number(funcionario);
     if (cliente) where.clienteId = Number(cliente);
     if (isDelivery === 'true') where.isDelivery = true;
@@ -1391,7 +1403,7 @@ router.get('/', async (req, res) => {
         caixaVendas: true,
       },
       orderBy: { dataVenda: 'desc' },
-      take: 100,
+      take: 500,
     });
 
     res.json(mapSales(normalizeSales(vendas)));

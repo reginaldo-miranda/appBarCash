@@ -1,0 +1,111 @@
+__tests__/cadastro-produtos.test.tsx(2,40): error TS7016: Could not find a declaration file for module 'react-test-renderer'. '/Users/reginaldomiranda/Documents/appBarCash/mobile/node_modules/react-test-renderer/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-test-renderer` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-test-renderer';`
+__tests__/cadastro-produtos.test.tsx(5,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(6,19): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(10,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(14,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(15,40): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(20,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(22,14): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(23,13): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(24,13): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(26,31): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(27,27): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(28,25): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(40,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(43,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/cadastro-produtos.test.tsx(44,3): error TS2304: Cannot find name 'beforeEach'.
+__tests__/cadastro-produtos.test.tsx(45,5): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(46,5): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(55,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/cadastro-produtos.test.tsx(67,62): error TS7006: Parameter 'n' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(68,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(69,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(70,62): error TS7006: Parameter 'n' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(71,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(74,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/cadastro-produtos.test.tsx(75,5): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(100,76): error TS7006: Parameter 'n' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(101,54): error TS7006: Parameter 't' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(102,32): error TS7006: Parameter 'c' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(107,5): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(110,7): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/cadastro-produtos.test.tsx(113,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(114,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(117,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/cadastro-produtos.test.tsx(129,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(130,53): error TS7006: Parameter 'n' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(131,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(131,22): error TS7006: Parameter 'm' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(132,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(132,22): error TS7006: Parameter 'm' implicitly has an 'any' type.
+__tests__/cadastro-produtos.test.tsx(133,5): error TS2304: Cannot find name 'expect'.
+__tests__/cadastro-produtos.test.tsx(133,22): error TS7006: Parameter 'm' implicitly has an 'any' type.
+__tests__/entregues-filtros.test.tsx(5,1): error TS2304: Cannot find name 'beforeAll'.
+__tests__/entregues-filtros.test.tsx(6,3): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(9,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(10,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(11,12): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(11,27): error TS7006: Parameter 'k' implicitly has an 'any' type.
+__tests__/entregues-filtros.test.tsx(15,1): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(17,14): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(17,31): error TS7031: Binding element 'method' implicitly has an 'any' type.
+__tests__/entregues-filtros.test.tsx(17,39): error TS7031: Binding element 'url' implicitly has an 'any' type.
+__tests__/entregues-filtros.test.tsx(36,25): error TS2708: Cannot use namespace 'jest' as a value.
+__tests__/entregues-filtros.test.tsx(41,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/entregues-filtros.test.tsx(42,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/entregues-filtros.test.tsx(43,29): error TS2322: Type '{ setorIdOverride: number; setorNomeOverride: string; forceFilterStatus: string; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'setorIdOverride' does not exist on type 'IntrinsicAttributes'.
+__tests__/entregues-filtros.test.tsx(46,7): error TS2304: Cannot find name 'expect'.
+__tests__/entregues-filtros.test.tsx(53,7): error TS2304: Cannot find name 'expect'.
+__tests__/entregues-filtros.test.tsx(54,7): error TS2304: Cannot find name 'expect'.
+__tests__/entregues-filtros.test.tsx(55,7): error TS2304: Cannot find name 'expect'.
+__tests__/entregues-filtros.test.tsx(64,7): error TS2304: Cannot find name 'expect'.
+__tests__/entregues-filtros.test.tsx(66,7): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(3,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(4,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(6,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(7,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(9,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(11,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(12,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(14,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(17,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(17,12): error TS18047: 'r.from' is possibly 'null'.
+__tests__/filters-utils.test.ts(18,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(18,12): error TS18047: 'r.to' is possibly 'null'.
+__tests__/filters-utils.test.ts(20,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(22,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(23,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(27,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(28,3): error TS2593: Cannot find name 'it'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/filters-utils.test.ts(30,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(32,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(33,5): error TS2304: Cannot find name 'expect'.
+__tests__/filters-utils.test.ts(34,5): error TS2304: Cannot find name 'expect'.
+__tests__/sale-increment-concurrency.test.ts(7,1): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/sale-increment-concurrency.test.ts(41,3): error TS2304: Cannot find name 'expect'.
+__tests__/sale-increment-concurrency.test.ts(42,3): error TS2304: Cannot find name 'expect'.
+__tests__/sale-increment-concurrency.test.ts(45,1): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/sale-increment-concurrency.test.ts(55,3): error TS2304: Cannot find name 'expect'.
+__tests__/sale-increment-concurrency.test.ts(57,3): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(3,1): error TS2593: Cannot find name 'describe'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/variation.price.test.ts(4,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/variation.price.test.ts(7,5): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(11,5): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(14,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/variation.price.test.ts(16,5): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(19,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/variation.price.test.ts(21,5): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(24,3): error TS2593: Cannot find name 'test'. Do you need to install type definitions for a test runner? Try `npm i --save-dev @types/jest` or `npm i --save-dev @types/mocha` and then add 'jest' or 'mocha' to the types field in your tsconfig.
+__tests__/variation.price.test.ts(28,5): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(29,5): error TS2304: Cannot find name 'expect'.
+__tests__/variation.price.test.ts(30,5): error TS2304: Cannot find name 'expect'.
+app/configuracoes.tsx(1072,35): error TS7006: Parameter 'val' implicitly has an 'any' type.
+app/configuracoes.tsx(1078,35): error TS7006: Parameter 'val' implicitly has an 'any' type.
+src/components/CriarComandaModal.tsx(196,23): error TS2367: This comparison appears to be unintentional because the types '"ios"' and '"web"' have no overlap.
+src/components/PixModal.tsx(46,51): error TS2551: Property 'pixRefName' does not exist on type '{ csc: any; cscId: any; ambiente: any; serie: string; numeroInicial: string; certificadoSenha: any; certificadoPath: any; xmlFolder: any; chavePix: any; pixName: any; pixCity: any; }'. Did you mean 'pixName'?
+src/components/PixModal.tsx(47,51): error TS2551: Property 'pixRefCity' does not exist on type '{ csc: any; cscId: any; ambiente: any; serie: string; numeroInicial: string; certificadoSenha: any; certificadoPath: any; xmlFolder: any; chavePix: any; pixName: any; pixCity: any; }'. Did you mean 'pixCity'?
+src/components/VariationSelectorModal.tsx(73,130): error TS2339: Property 'id' does not exist on type 'Product'.
+src/components/VariationSelectorModal.tsx(75,94): error TS2339: Property 'id' does not exist on type 'Product'.
+src/services/NfceService.ts(106,17): error TS1117: An object literal cannot have multiple properties with the same name.
