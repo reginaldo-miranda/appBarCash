@@ -18,7 +18,7 @@ import { logDebug } from '../debug_logger.js';
 export const emitirNfce = async (req, res) => {
     logDebug(`[Controller] emitirNfce. Body: ${JSON.stringify(req.body)}`);
     try {
-        const { saleId } = req.body;
+        const { saleId, itemsOverlay } = req.body;
         if (!saleId) {
             return res.status(400).json({ error: 'Sale ID is required' });
         }
@@ -34,6 +34,22 @@ export const emitirNfce = async (req, res) => {
         });
 
         if (!sale) return res.status(404).json({ error: 'Venda não encontrada' });
+
+        // Aplica o overlay de itens se existir (garante NCMs atualizados mesmo se o banco estiver dessincronizado)
+        if (itemsOverlay && Array.isArray(itemsOverlay) && itemsOverlay.length > 0) {
+             sale.itens = sale.itens.map(dbItem => {
+                 const overlayItem = itemsOverlay.find(oi => String(oi._id || oi.id) === String(dbItem.id));
+                 if (overlayItem && overlayItem.product) {
+                      dbItem.product = {
+                          ...dbItem.product,
+                          ncm: overlayItem.product.ncm || dbItem.product.ncm,
+                          cfop: overlayItem.product.cfop || dbItem.product.cfop,
+                          csosn: overlayItem.product.csosn || dbItem.product.csosn
+                      };
+                 }
+                 return dbItem;
+             });
+        }
 
         logDebug(`[EmitirNfce] Sale ID: ${saleId}`);
         logDebug(`[EmitirNfce] Cashback Usado: ${sale?.cashbackUsado}`);

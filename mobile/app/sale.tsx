@@ -74,14 +74,17 @@ export default function SaleScreen() {
   const isPhone = Dimensions.get('window').width < 768;
   const [initialItemsModalShown, setInitialItemsModalShown] = useState(false);
   const latestReqRef = useRef<Map<string, number>>(new Map());
+
+  // NFC-e flag para o modal rápido (antes de ir pra divisão)
+  const [fastNfceOption, setFastNfceOption] = useState(false);
   
-  const handleEmitNfce = async (saleIdToEmit: string) => {
+  const handleEmitNfce = async (saleIdToEmit: string, itemsOverlay?: any[]) => {
     console.log('[DEBUG] handleEmitNfce CALLED. ID:', saleIdToEmit);
     setNfceModalVisible(true);
     setNfceStatus('loading');
     setNfceMessage('Transmitindo para SEFAZ...');
     try {
-      const res = await NfceService.emitir(saleIdToEmit); 
+      const res = await NfceService.emitir(saleIdToEmit, itemsOverlay); 
       console.log('[DEBUG] Resposta Emitir NFC-e:', res);
 
       // Verificação robusta de status (API retorna 'AUTORIZADO' ou 'REJEITADO')
@@ -1353,7 +1356,9 @@ export default function SaleScreen() {
     // 2. Transmit NFC-e to SEFAZ
     if (success && sale) {
        const saleId = (sale as any).id || (sale as any)._id;
-       handleEmitNfce(saleId);
+       // We pass sale.itens as the itemsOverlay because they might have just been updated 
+       // by FiscalDataValidationModal with the correct user-typed NCMs
+       handleEmitNfce(saleId, sale.itens);
     }
   };
 
@@ -1988,6 +1993,19 @@ export default function SaleScreen() {
               <Text style={styles.confirmButtonText}>Dividir / Parcial</Text>
             </TouchableOpacity>
 
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, backgroundColor: '#f0f8ff', padding: 10, borderRadius: 8 }}>
+               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                 <Ionicons name="receipt-outline" size={24} color="#2196F3" />
+                 <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#333' }}>Emitir NFC-e (Cupom Fiscal)?</Text>
+               </View>
+               <Switch
+                 value={fastNfceOption}
+                 onValueChange={setFastNfceOption}
+                 trackColor={{ false: "#ccc", true: "#2196F3" }}
+                 thumbColor={"#fff"}
+               />
+            </View>
+
             <Text style={[styles.modalLabel, { marginBottom: 6 }]}>Método de Pagamento (Restante):</Text>
             {paymentMethods.map(method => (
               <TouchableOpacity
@@ -2052,6 +2070,86 @@ export default function SaleScreen() {
                       return;
                   }
 
+                  // 🚨 PRE-CHECK FISCAL SE EMITIR NF-E ESTIVER HABILITADO
+                  const isEverythingPaid = totalRemaining <= 0.05;
+                  
+                  if (fastNfceOption && sale) {
+                      const missingProducts: any[] = [];
+                      if (sale.itens && Array.isArray(sale.itens)) {
+                          sale.itens.forEach(item => {
+                              const p = item.produto as any;
+                              const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
+                              const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                              
+                              const isInvalidNcm = !p.ncm || p.ncm.replace(/\D/g, '').length !== 8 || p.ncm === '00000000' || p.ncm === '99998888';
+                              const isInvalidCfop = !p.cfop || p.cfop.replace(/\D/g, '').length !== 4;
+                              const isInvalidCsosn = !p.csosn || p.csosn.replace(/\D/g, '').length < 3;
+
+                              if (!isPopulated || isInvalidNcm || isInvalidCfop || isInvalidCsosn) {
+                                  missingProducts.push({
+                                      _id: item._id || (item as any).id,
+                                      productId: pid,
+                                      nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
+                                      ncm: isPopulated ? p.ncm : undefined,
+                                      cfop: isPopulated ? p.cfop : undefined,
+                                      csosn: isPopulated ? p.csosn : undefined
+                                  });
+                              }
+                          });
+                      }
+
+                      if (missingProducts.length > 0) {
+                          setMissingFiscalProducts(missingProducts);
+                          setPendingNfcePontos(0);
+                          setModalVisible(false); // Fecha o modal principal para não sobrepor
+                          
+                          // Agora faz o pagamento, mas a NFCe aguarda o modal
+                          try {
+                             if (!isEverythingPaid) {
+                                 setFinalizing(true);
+                                 const itemsPayload = calculateRemainingItemsPayload(sale, totalRemaining);
+                                 const payPayload = {
+                                     paymentInfo: { method: paymentMethod, totalAmount: totalRemaining },
+                                     items: itemsPayload
+                                 };
+                                 const saleId = sale._id || (sale as any).id;
+                                 await saleService.payItems(saleId, payPayload);
+                             }
+                          } catch(e: any) {
+                              Alert.alert('Erro no Pagamento', e.message);
+                              setFinalizing(false);
+                              return; // Se pagamento falhou, aborta NFCe
+                          }
+                          
+                          setFinalizing(false);
+                          setTimeout(() => {
+                              setFiscalModalVisible(true);
+                          }, 400);
+                          return;
+                      }
+                      
+                      // Se tem NCMs preenchidos
+                      try {
+                          if (!isEverythingPaid) {
+                              setFinalizing(true);
+                              const itemsPayload = calculateRemainingItemsPayload(sale, totalRemaining);
+                              const payPayload = {
+                                  paymentInfo: { method: paymentMethod, totalAmount: totalRemaining },
+                                  items: itemsPayload
+                              };
+                              const saleId = sale._id || (sale as any).id;
+                              await saleService.payItems(saleId, payPayload);
+                          }
+                          continueFinalizationWithNfce(0);
+                      } catch(e: any) {
+                           Alert.alert('Erro no Pagamento', e.message);
+                      } finally {
+                          setFinalizing(false);
+                          setModalVisible(false);
+                      }
+                      return;
+                  }
+
                   // Se falta pagar, realiza o pagamento total com o método selecionado e DEPOIS finaliza
                   try {
                       setFinalizing(true);
@@ -2110,6 +2208,8 @@ export default function SaleScreen() {
             setFiscalModalVisible(false);
             setMissingFiscalProducts([]);
             console.log('NFC-e cancelada por falta de dados fiscais.');
+            // Se o usuário cancelar preencher os dados, continuamos sem nota
+            continueFinalizationWithNfce(pendingNfcePontos);
         }}
         onSuccess={async (updatedFiscalData) => {
             setFiscalModalVisible(false);
@@ -2132,7 +2232,7 @@ export default function SaleScreen() {
                        hasChanges = true;
                        return {
                           ...item,
-                          produto: isPopulated ? {
+                          product: isPopulated ? {
                               ...p,
                               ncm: fiscalInfo.ncm,
                               cfop: fiscalInfo.cfop,
@@ -2170,7 +2270,7 @@ export default function SaleScreen() {
             }
 
             Alert.alert('Sucesso', 'Dados fiscais recebidos. Continuando com a emissão...');
-            // Ao invés de ir direto pro NFC-e, abre o modal de CPF
+            // Ao invés de ir direto pro NFC-e, abre o modal de CPF se ainda precisarmos finalizar o sale
             setCpfModalVisible(true);
         }}
       />
@@ -2245,14 +2345,18 @@ export default function SaleScreen() {
              if (wantNfce && sale) {
                  const missingProducts: any[] = [];
                  if (sale.itens && Array.isArray(sale.itens)) {
-                     sale.itens.forEach(item => {
-                         const p = item.produto as any;
-                         const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                         const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
-                         
-                         // Se falto dado fiscal ou se o produto eh so string (indicando q nao populou e precisamos buscar os dados)
-                         if (!isPopulated || !p.ncm || !p.cfop || !p.csosn) {
-                             missingProducts.push({
+                      sale.itens.forEach(item => {
+                          const p = item.produto as any;
+                          const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
+                          const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                          
+                          const isInvalidNcm = !p.ncm || p.ncm.replace(/\D/g, '').length !== 8 || p.ncm === '00000000' || p.ncm === '99998888';
+                          const isInvalidCfop = !p.cfop || p.cfop.replace(/\D/g, '').length !== 4;
+                          const isInvalidCsosn = !p.csosn || p.csosn.replace(/\D/g, '').length < 3;
+
+                          // Se falto dado fiscal ou se o produto eh so string (indicando q nao populou e precisamos buscar os dados)
+                          if (!isPopulated || isInvalidNcm || isInvalidCfop || isInvalidCsosn) {
+                              missingProducts.push({
                                  _id: item._id || (item as any).id,
                                  productId: pid,
                                  nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),

@@ -53,20 +53,25 @@ export default function FiscalDataValidationModal({
       });
       setFormData(initial);
 
-      // Fetch fresh product data from backend to get existing fiscal info that might not be in the cart snapshot
+      // Fetch fresh product data from backend to get existing fiscal info
       const fetchFreshData = async () => {
         try {
-          const fetchPromises = products.map(p => api.get(`/product/${p.productId}`).catch(e => null));
-          const responses = await Promise.all(fetchPromises);
+          // A rota /product/:id não existe na API padrão, então trazemos do list
+          // Para otimizar, como o banco pode ser grande, ideal era a rota, mas vamos tentar
+          // bater na rota product/list se ela existir, senão buscamos getAll no appContext.
+          // Neste caso vamos apenas confiar na prop `products` preenchida anteriormente + tentar `/product`
+          const res = await api.get('/product');
+          const allProducts = res.data || [];
           
           if (!mounted) return;
 
           setFormData(prev => {
              const updated = { ...prev };
-             responses.forEach((res, index) => {
-                 const pid = products[index].productId;
-                 if (res && res.data) {
-                     const pData = res.data;
+             products.forEach(p => {
+                 const pid = p.productId;
+                 // Busca na lista retornada
+                 const pData = allProducts.find((x: any) => String(x.id || x._id) === String(pid));
+                 if (pData) {
                      updated[pid] = {
                          ncm: (pData.ncm || prev[pid]?.ncm || '').replace(/\D/g, ''),
                          cfop: (pData.cfop || prev[pid]?.cfop || '5102').replace(/\D/g, ''),
@@ -108,8 +113,8 @@ export default function FiscalDataValidationModal({
         Alert.alert('Atenção', `Preencha todos os campos fiscais para o produto: ${p.nomeProduto}`);
         return;
       }
-      if (data.ncm.replace(/\D/g, '').length !== 8) {
-        Alert.alert('Atenção', `O NCM do produto ${p.nomeProduto} deve ter exatamente 8 dígitos.`);
+      if (data.ncm.replace(/\D/g, '').length !== 8 || data.ncm === '00000000' || data.ncm === '99998888') {
+        Alert.alert('Atenção', `O NCM do produto ${p.nomeProduto} é inválido ou dummy. Informe um NCM real com 8 dígitos.`);
         return;
       }
       if (data.cfop.replace(/\D/g, '').length !== 4) {

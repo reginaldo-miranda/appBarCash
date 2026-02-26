@@ -16,9 +16,9 @@ export interface NfceConfig {
 import { Platform } from 'react-native';
 
 export const NfceService = {
-    emitir: async (saleId: number | string) => {
+    emitir: async (saleId: number | string, itemsOverlay?: any[]) => {
         try {
-            const response = await api.post('/nfce/emitir', { saleId });
+            const response = await api.post('/nfce/emitir', { saleId, itemsOverlay });
             return response.data;
         } catch (error: any) {
             throw error.response?.data?.error || 'Erro ao emitir NFC-e';
