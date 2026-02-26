@@ -2077,22 +2077,26 @@ export default function SaleScreen() {
                       const missingProducts: any[] = [];
                       if (sale.itens && Array.isArray(sale.itens)) {
                           sale.itens.forEach(item => {
-                              const p = item.produto as any;
+                              const p = (item.product || item.produto) as any;
                               const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
                               const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
                               
-                              const isInvalidNcm = !p.ncm || p.ncm.replace(/\D/g, '').length !== 8 || p.ncm === '00000000' || p.ncm === '99998888';
-                              const isInvalidCfop = !p.cfop || p.cfop.replace(/\D/g, '').length !== 4;
-                              const isInvalidCsosn = !p.csosn || p.csosn.replace(/\D/g, '').length < 3;
+                              const pNcm = (typeof p?.ncm === 'string' ? p.ncm : (typeof (item as any)?.ncm === 'string' ? (item as any).ncm : ''));
+                              const pCfop = (typeof p?.cfop === 'string' ? p.cfop : (typeof (item as any)?.cfop === 'string' ? (item as any).cfop : ''));
+                              const pCsosn = (typeof p?.csosn === 'string' ? p.csosn : (typeof (item as any)?.csosn === 'string' ? (item as any).csosn : ''));
+                              
+                              const isInvalidNcm = !pNcm || pNcm.replace(/\D/g, '').length !== 8 || pNcm === '00000000' || pNcm === '99998888';
+                              const isInvalidCfop = !pCfop || pCfop.replace(/\D/g, '').length !== 4;
+                              const isInvalidCsosn = !pCsosn || pCsosn.replace(/\D/g, '').length < 3;
 
                               if (!isPopulated || isInvalidNcm || isInvalidCfop || isInvalidCsosn) {
                                   missingProducts.push({
                                       _id: item._id || (item as any).id,
                                       productId: pid,
                                       nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
-                                      ncm: isPopulated ? p.ncm : undefined,
-                                      cfop: isPopulated ? p.cfop : undefined,
-                                      csosn: isPopulated ? p.csosn : undefined
+                                      ncm: isPopulated ? p.ncm : (item as any).ncm,
+                                      cfop: isPopulated ? p.cfop : (item as any).cfop,
+                                      csosn: isPopulated ? p.csosn : (item as any).csosn
                                   });
                               }
                           });
@@ -2346,13 +2350,17 @@ export default function SaleScreen() {
                  const missingProducts: any[] = [];
                  if (sale.itens && Array.isArray(sale.itens)) {
                       sale.itens.forEach(item => {
-                          const p = item.produto as any;
+                          const p = (item.product || item.produto) as any;
                           const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
                           const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
                           
-                          const isInvalidNcm = !p.ncm || p.ncm.replace(/\D/g, '').length !== 8 || p.ncm === '00000000' || p.ncm === '99998888';
-                          const isInvalidCfop = !p.cfop || p.cfop.replace(/\D/g, '').length !== 4;
-                          const isInvalidCsosn = !p.csosn || p.csosn.replace(/\D/g, '').length < 3;
+                          const pNcm = (typeof p?.ncm === 'string' ? p.ncm : (typeof (item as any)?.ncm === 'string' ? (item as any).ncm : ''));
+                          const pCfop = (typeof p?.cfop === 'string' ? p.cfop : (typeof (item as any)?.cfop === 'string' ? (item as any).cfop : ''));
+                          const pCsosn = (typeof p?.csosn === 'string' ? p.csosn : (typeof (item as any)?.csosn === 'string' ? (item as any).csosn : ''));
+                          
+                          const isInvalidNcm = !pNcm || pNcm.replace(/\D/g, '').length !== 8 || pNcm === '00000000' || pNcm === '99998888';
+                          const isInvalidCfop = !pCfop || pCfop.replace(/\D/g, '').length !== 4;
+                          const isInvalidCsosn = !pCsosn || pCsosn.replace(/\D/g, '').length < 3;
 
                           // Se falto dado fiscal ou se o produto eh so string (indicando q nao populou e precisamos buscar os dados)
                           if (!isPopulated || isInvalidNcm || isInvalidCfop || isInvalidCsosn) {
@@ -2360,9 +2368,9 @@ export default function SaleScreen() {
                                  _id: item._id || (item as any).id,
                                  productId: pid,
                                  nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
-                                 ncm: isPopulated ? p.ncm : undefined,
-                                 cfop: isPopulated ? p.cfop : undefined,
-                                 csosn: isPopulated ? p.csosn : undefined
+                                 ncm: isPopulated ? p.ncm : (item as any).ncm,
+                                 cfop: isPopulated ? p.cfop : (item as any).cfop,
+                                 csosn: isPopulated ? p.csosn : (item as any).csosn
                              });
                          }
                      });
