@@ -2079,7 +2079,7 @@ export default function SaleScreen() {
                           sale.itens.forEach(item => {
                               const p = (item.product || item.produto) as any;
                               const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                              const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                              const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : p));
                               
                               const pNcm = (typeof p?.ncm === 'string' ? p.ncm : (typeof (item as any)?.ncm === 'string' ? (item as any).ncm : ''));
                               const pCfop = (typeof p?.cfop === 'string' ? p.cfop : (typeof (item as any)?.cfop === 'string' ? (item as any).cfop : ''));
@@ -2090,14 +2090,16 @@ export default function SaleScreen() {
                               const isInvalidCsosn = !pCsosn || pCsosn.replace(/\D/g, '').length < 3;
 
                               if (!isPopulated || isInvalidNcm || isInvalidCfop || isInvalidCsosn) {
-                                  missingProducts.push({
-                                      _id: item._id || (item as any).id,
-                                      productId: pid,
-                                      nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
-                                      ncm: isPopulated ? p.ncm : (item as any).ncm,
-                                      cfop: isPopulated ? p.cfop : (item as any).cfop,
-                                      csosn: isPopulated ? p.csosn : (item as any).csosn
-                                  });
+                                  if (!missingProducts.some(m => m.productId === pid)) {
+                                      missingProducts.push({
+                                          _id: item._id || (item as any).id,
+                                          productId: pid,
+                                          nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
+                                          ncm: isPopulated ? p.ncm : (item as any).ncm,
+                                          cfop: isPopulated ? p.cfop : (item as any).cfop,
+                                          csosn: isPopulated ? p.csosn : (item as any).csosn
+                                      });
+                                  }
                               }
                           });
                       }
@@ -2228,7 +2230,7 @@ export default function SaleScreen() {
                 const updatedItens = sale.itens.map(item => {
                     const p = item.produto as any;
                     const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                    const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                    const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : p));
                     
                     const fiscalInfo = updatedFiscalData[pid];
                     
@@ -2352,7 +2354,7 @@ export default function SaleScreen() {
                       sale.itens.forEach(item => {
                           const p = (item.product || item.produto) as any;
                           const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                          const pid = isPopulated ? (p._id || p.id) : (p || item.productId || (item as any).produtoId);
+                          const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : p));
                           
                           const pNcm = (typeof p?.ncm === 'string' ? p.ncm : (typeof (item as any)?.ncm === 'string' ? (item as any).ncm : ''));
                           const pCfop = (typeof p?.cfop === 'string' ? p.cfop : (typeof (item as any)?.cfop === 'string' ? (item as any).cfop : ''));
@@ -2364,14 +2366,16 @@ export default function SaleScreen() {
 
                           // Se falto dado fiscal ou se o produto eh so string (indicando q nao populou e precisamos buscar os dados)
                           if (!isPopulated || isInvalidNcm || isInvalidCfop || isInvalidCsosn) {
-                              missingProducts.push({
-                                 _id: item._id || (item as any).id,
-                                 productId: pid,
-                                 nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
-                                 ncm: isPopulated ? p.ncm : (item as any).ncm,
-                                 cfop: isPopulated ? p.cfop : (item as any).cfop,
-                                 csosn: isPopulated ? p.csosn : (item as any).csosn
-                             });
+                              if (!missingProducts.some(m => m.productId === pid)) {
+                                 missingProducts.push({
+                                    _id: item._id || (item as any).id,
+                                    productId: pid,
+                                    nomeProduto: item.nomeProduto || (isPopulated ? p.nome : 'Produto'),
+                                    ncm: isPopulated ? p.ncm : (item as any).ncm,
+                                    cfop: isPopulated ? p.cfop : (item as any).cfop,
+                                    csosn: isPopulated ? p.csosn : (item as any).csosn
+                                });
+                              }
                          }
                      });
                  }

@@ -118,7 +118,7 @@ router.post('/create', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
       },
     });
 
@@ -299,7 +299,7 @@ router.put('/:id/update', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
       }
     });
 
@@ -321,7 +321,7 @@ router.get('/open', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { nome: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
       },
       orderBy: { dataVenda: 'desc' },
     });
@@ -408,7 +408,7 @@ router.get('/list', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { nome: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
         caixaVendas: true,
       },
       orderBy: { dataVenda: 'desc' },
@@ -469,7 +469,7 @@ router.get('/mesa/:mesaId', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { select: { numero: true, nome: true } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
         caixaVendas: true,
       },
       orderBy: { dataVenda: 'desc' },
@@ -498,7 +498,7 @@ router.get('/:id', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { select: { numero: true, nome: true } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
         caixaVendas: true,
       },
     });
@@ -696,7 +696,7 @@ router.get('/:id', async (req, res) => {
       include: {
         funcionario: { select: { nome: true } },
         cliente: { select: { nome: true } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
       },
     });
 
@@ -789,7 +789,7 @@ router.delete('/:id/item/:produtoId', async (req, res) => {
       include: {
         funcionario: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
-        itens: { include: { product: { select: { nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
+        itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
       },
     });
 
