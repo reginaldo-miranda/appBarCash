@@ -103,7 +103,6 @@ export const NfceService = {
                 numeroInicial: company.numeroInicialNfce ? String(company.numeroInicialNfce) : '',
                 certificadoSenha: company.certificadoSenha || '',
                 certificadoPath: company.certificadoPath || null,
-                certificadoPath: company.certificadoPath || null,
                 xmlFolder: company.xmlFolder || '',
                 chavePix: company.chavePix || '',
                 pixName: company.nomeFantasia || company.razaoSocial || '',

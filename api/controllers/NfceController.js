@@ -41,10 +41,10 @@ export const emitirNfce = async (req, res) => {
                  const overlayItem = itemsOverlay.find(oi => String(oi._id || oi.id) === String(dbItem.id));
                  if (overlayItem && overlayItem.product) {
                       dbItem.product = {
-                          ...dbItem.product,
-                          ncm: overlayItem.product.ncm || dbItem.product.ncm,
-                          cfop: overlayItem.product.cfop || dbItem.product.cfop,
-                          csosn: overlayItem.product.csosn || dbItem.product.csosn
+                          ...(dbItem.product || {}),
+                          ncm: overlayItem.product.ncm || (dbItem.product?.ncm || ''),
+                          cfop: overlayItem.product.cfop || (dbItem.product?.cfop || ''),
+                          csosn: overlayItem.product.csosn || (dbItem.product?.csosn || '')
                       };
                  }
                  return dbItem;

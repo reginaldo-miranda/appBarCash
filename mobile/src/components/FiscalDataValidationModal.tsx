@@ -56,27 +56,27 @@ export default function FiscalDataValidationModal({
       // Fetch fresh product data from backend to get existing fiscal info
       const fetchFreshData = async () => {
         try {
-          // A rota /product/:id não existe na API padrão, então trazemos do list
-          // Para otimizar, como o banco pode ser grande, ideal era a rota, mas vamos tentar
-          // bater na rota product/list se ela existir, senão buscamos getAll no appContext.
-          // Neste caso vamos apenas confiar na prop `products` preenchida anteriormente + tentar `/product`
-          const res = await api.get('/product');
-          const allProducts = res.data || [];
+          // Busca individualmente cada produto para garantir que todos os itens com erro sejam encontrados
+          const fetchPromises = products.map(p => 
+             api.get(`/product/${p.productId}`).catch(err => null)
+          );
           
-          if (!mounted) return;
-
+          const responses = await Promise.all(fetchPromises);
+          
           if (!mounted) return;
 
           setFormData(prev => {
              const updated = { ...prev };
-             products.forEach(p => {
-                 const pid = p.productId;
-                 // Busca na lista retornada
-                 const pData = allProducts.find((x: any) => String(x.id || x._id) === String(pid));
-                 if (pData) {
+             
+             responses.forEach((res, index) => {
+                 if (res && res.data) {
+                     const pData = res.data;
+                     const pid = products[index].productId;
+                     
                      const pNcm = pData.ncm ? String(pData.ncm).replace(/\D/g, '') : '';
                      const pCfop = pData.cfop ? String(pData.cfop).replace(/\D/g, '') : '';
                      const pCsosn = pData.csosn ? String(pData.csosn).replace(/\D/g, '') : '';
+                     
                      updated[pid] = {
                          ncm: prev[pid]?.ncm ? prev[pid].ncm : (pNcm || ''),
                          cfop: prev[pid]?.cfop ? prev[pid].cfop : (pCfop || '5102'),
@@ -84,6 +84,7 @@ export default function FiscalDataValidationModal({
                      };
                  }
              });
+             
              return updated;
           });
 

@@ -2079,7 +2079,7 @@ export default function SaleScreen() {
                           sale.itens.forEach(item => {
                               const p = (item.product || item.produto) as any;
                               const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                              const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : p));
+                              const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : '') || item._id || (item as any).id || Math.random());
                               
                               const pNcm = (typeof p?.ncm === 'string' ? p.ncm : (typeof (item as any)?.ncm === 'string' ? (item as any).ncm : ''));
                               const pCfop = (typeof p?.cfop === 'string' ? p.cfop : (typeof (item as any)?.cfop === 'string' ? (item as any).cfop : ''));
@@ -2230,7 +2230,7 @@ export default function SaleScreen() {
                 const updatedItens = sale.itens.map(item => {
                     const p = item.produto as any;
                     const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                    const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : p));
+                    const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : '') || item._id || (item as any).id || Math.random());
                     
                     const fiscalInfo = updatedFiscalData[pid];
                     
@@ -2354,7 +2354,7 @@ export default function SaleScreen() {
                       sale.itens.forEach(item => {
                           const p = (item.product || item.produto) as any;
                           const isPopulated = p && typeof p === 'object' && !Array.isArray(p);
-                          const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : p));
+                          const pid = String(item.productId || (item as any).produtoId || (isPopulated ? (p._id || p.id) : '') || item._id || (item as any).id || Math.random().toString());
                           
                           const pNcm = (typeof p?.ncm === 'string' ? p.ncm : (typeof (item as any)?.ncm === 'string' ? (item as any).ncm : ''));
                           const pCfop = (typeof p?.cfop === 'string' ? p.cfop : (typeof (item as any)?.cfop === 'string' ? (item as any).cfop : ''));
