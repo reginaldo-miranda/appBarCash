@@ -242,6 +242,11 @@ const mapSaleResponse = (venda) => {
     }));
     base.totalPago = base.caixaVendas.reduce((acc, cv) => acc + cv.valor, 0);
   }
+  
+  if (venda.nfce) {
+    base.nfce = venda.nfce;
+  }
+  
   return base;
 };
 const mapSales = (arr) => (Array.isArray(arr) ? arr.map(mapSaleResponse) : arr);
@@ -321,6 +326,7 @@ router.get('/open', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { nome: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
+        nfce: true,
         itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
       },
       orderBy: { dataVenda: 'desc' },
@@ -408,6 +414,7 @@ router.get('/list', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { nome: true } },
         mesa: { include: { funcionarioResponsavel: { select: { nome: true } } } },
+        nfce: true,
         itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
         caixaVendas: true,
       },
@@ -441,6 +448,7 @@ router.get('/finalizadas', async (req, res) => {
         funcionario: { select: { nome: true } },
         entregador: { select: { nome: true } },
         cliente: { select: { nome: true } },
+        nfce: true,
         mesa: { select: { numero: true, nome: true } },
       },
       orderBy: { dataVenda: 'desc' },
@@ -469,6 +477,7 @@ router.get('/mesa/:mesaId', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { select: { numero: true, nome: true } },
+        nfce: true,
         itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
         caixaVendas: true,
       },
@@ -498,6 +507,7 @@ router.get('/:id', async (req, res) => {
         entregador: { select: { nome: true } },
         cliente: { select: { id: true, nome: true, cpf: true, endereco: true, cidade: true, estado: true, saldoCashback: true, pontos: true, participaFidelidade: true } },
         mesa: { select: { numero: true, nome: true } },
+        nfce: true,
         itens: { include: { product: { select: { id: true, nome: true, precoVenda: true, ncm: true, cfop: true, csosn: true } } } },
         caixaVendas: true,
       },
