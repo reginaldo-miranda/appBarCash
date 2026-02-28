@@ -62,6 +62,7 @@ import nfceRoutes from "./routes/nfce.js";
 import systemRoutes from "./routes/system.js";
 import idleTimeConfigRoutes from "./routes/idleTimeConfig.js";
 import roleRoutes from "./routes/roles.js";
+import configRoutes from "./routes/config.js";
 
 // dotenv configured at top
 
@@ -282,7 +283,8 @@ app.use("/api/printer", authenticate, printerRoutes);
 app.use("/api/nfce", nfceRoutes);
 app.use("/api/system", systemRoutes); // Public for setup
 app.use("/api/idle-time-config", authenticate, idleTimeConfigRoutes);
-app.use("/api/roles", authenticate, roleRoutes); // FIM ROTAS API
+app.use("/api/roles", authenticate, roleRoutes); 
+app.use("/api/config", authenticate, configRoutes); // FIM ROTAS API
 
 // Tratamento de 404 para rotas da API que não existem
 app.all('/api/*', (req, res) => {

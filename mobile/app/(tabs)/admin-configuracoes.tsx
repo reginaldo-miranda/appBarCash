@@ -651,6 +651,22 @@ export default function AdminConfiguracoesScreen() {
 
             <TouchableOpacity 
               style={styles.settingItem}
+              onPress={() => navigation.navigate('admin-smtp-config' as never)}
+            >
+              <View style={styles.settingContent}>
+                <SafeIcon name="mail" size={24} color="#FF9800" fallbackText="📧" />
+                <View style={styles.settingInfo}>
+                  <Text style={styles.settingTitle}>Configuração de E-mail (SMTP)</Text>
+                  <Text style={styles.settingDescription}>
+                    Configurações para o sistema enviar e-mails
+                  </Text>
+                </View>
+              </View>
+              <SafeIcon name="chevron-forward" size={20} color="#ccc" fallbackText="›" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.settingItem}
               onPress={() => navigation.navigate('TestScreen' as never)}
             >
               <View style={styles.settingContent}>
