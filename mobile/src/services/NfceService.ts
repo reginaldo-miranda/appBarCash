@@ -25,6 +25,20 @@ export const NfceService = {
         }
     },
 
+    sendNfceEmail: async (saleId: number | string, emailTo: string) => {
+        try {
+            // Desabilita retries e aumenta o timeout só para essa requisição, 
+            // já que a geração do PDF via Puppeteer e envio de E-mail pode demorar > 15s
+            const response = await api.post(`/nfce/${saleId}/send-email`, { emailTo }, {
+                timeout: 30000, // 30 segundos
+                raxConfig: { retry: 0 } // Desativa retry-axios para não gerar múltiplos envios
+            });
+            return response.data;
+        } catch (error: any) {
+            throw error.response?.data?.message || 'Erro ao enviar e-mail';
+        }
+    },
+
     updateConfig: async (config: NfceConfig, certificadoFile?: any) => {
         const formData = new FormData();
         formData.append('cscId', config.cscId);
