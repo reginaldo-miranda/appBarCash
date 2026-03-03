@@ -48,8 +48,12 @@ router.get("/list", async (req, res) => {
     const { nome } = req.query;
     const where = {};
     if (nome) {
-      // Busca simples (MySQL geralmente é case-insensitive por collation padrão)
-      where.nome = { contains: String(nome) };
+      // Busca ampla para incluir NOME, CPF ou TELEFONE
+      where.OR = [
+        { nome: { contains: String(nome).trim() } },
+        { cpf: { contains: String(nome).trim().replace(/[^\d.-]/g, '') } },
+        { fone: { contains: String(nome).trim().replace(/[^\d() -]/g, '') } }
+      ];
     }
     const customers = await prisma.customer.findMany({
       where,

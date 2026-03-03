@@ -229,15 +229,12 @@ export default function SaleScreen() {
   // Search Clients
   useEffect(() => {
       const delay = setTimeout(async () => {
-          if (searchClientQuery.length > 2) {
+          if (searchClientQuery.trim().length >= 2) {
               try {
-                  // Assuming customerService.getAll supports filtering or we store all?
-                  // Best practice: backend search. We added `?nome=` in customer.js
-                  const res = await api.get('/customer/list', { params: { nome: searchClientQuery } });
+                  const res = await api.get('/customer/list', { params: { nome: searchClientQuery.trim() } });
                   if (res.data) setClients(res.data);
               } catch (e) { console.error(e); }
           } else {
-             // If query empty, maybe clear list or show recent?
              if (searchClientQuery === '') setClients([]);
           }
       }, 500);
@@ -2443,11 +2440,11 @@ export default function SaleScreen() {
                   <Text style={styles.modalTitle}>Selecionar Cliente</Text>
                   <TextInput
                       style={[styles.placesInput, { marginBottom: 10 }]}
-                      placeholder="Buscar por nome..."
+                      placeholder="Buscar por nome, CPF ou fone..."
                       value={searchClientQuery}
                       onChangeText={setSearchClientQuery}
                   />
-                  {clients.length === 0 && searchClientQuery.length > 2 && (
+                  {clients.length === 0 && searchClientQuery.trim().length >= 2 && (
                        <View>
                            <TouchableOpacity style={{ padding: 12, backgroundColor: '#E3F2FD', borderRadius: 8, marginBottom: 8, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}
                                onPress={() => {

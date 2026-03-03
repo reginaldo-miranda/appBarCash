@@ -610,3 +610,52 @@
 [2026-03-03T00:28:36.036Z] [DEBUG] Finalize - FreshCV Count: 1
 [2026-03-03T00:28:36.036Z] [DEBUG] CV: 386 - dinheiro - 48.68
 [2026-03-03T00:28:36.036Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-03-03T14:31:34.509Z] [Controller] emitirNfce. Body: {"saleId":574,"itemsOverlay":[{"id":710,"saleId":574,"productId":6,"nomeProduto":"bauru completo","quantidade":1,"precoUnitario":12.34,"subtotal":12.34,"status":"pendente","createdAt":"2026-03-03T14:31:12.086Z","preparedAt":null,"preparedById":null,"origem":"tablet","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"710","produto":{"_id":"6","id":6,"nome":"bauru completo","preco":12.34,"ncm":"21069090","cfop":"5102","csosn":"102"}}]}
+[2026-03-03T14:31:34.576Z] [EmitirNfce] Sale ID: 574
+[2026-03-03T14:31:34.578Z] [EmitirNfce] Cashback Usado: 0
+[2026-03-03T14:31:34.579Z] [EmitirNfce] Delivery Fee: 4
+[2026-03-03T14:31:34.580Z] [EmitirNfce] Total Venda: 4
+[2026-03-03T14:31:34.581Z] [EmitirNfce] Subtotal: 0
+[2026-03-03T15:30:24.615Z] [Controller] emitirNfce. Body: {"saleId":575,"itemsOverlay":[{"id":711,"saleId":575,"productId":6,"nomeProduto":"bauru completo","quantidade":1,"precoUnitario":12.34,"subtotal":12.34,"status":"pendente","createdAt":"2026-03-03T15:30:02.489Z","preparedAt":null,"preparedById":null,"origem":"tablet","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"711","produto":{"_id":"6","id":6,"nome":"bauru completo","preco":12.34,"ncm":"21069090","cfop":"5102","csosn":"102"}}]}
+[2026-03-03T15:30:24.674Z] [EmitirNfce] Sale ID: 575
+[2026-03-03T15:30:24.675Z] [EmitirNfce] Cashback Usado: 0
+[2026-03-03T15:30:24.677Z] [EmitirNfce] Delivery Fee: 4
+[2026-03-03T15:30:24.677Z] [EmitirNfce] Total Venda: 4
+[2026-03-03T15:30:24.678Z] [EmitirNfce] Subtotal: 0
+[2026-03-03T15:42:07.343Z] [Controller] emitirNfce. Body: {"saleId":576,"itemsOverlay":[{"id":712,"saleId":576,"productId":7,"nomeProduto":"Bauru Teste QA cozinha","quantidade":1,"precoUnitario":12,"subtotal":12,"status":"pendente","createdAt":"2026-03-03T15:41:42.448Z","preparedAt":null,"preparedById":null,"origem":"tablet","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"712","produto":{"_id":"7","id":7,"nome":"Bauru Teste QA cozinha","preco":12,"ncm":"21069090","cfop":"5102","csosn":"102"}}]}
+[2026-03-03T15:42:07.362Z] [EmitirNfce] Sale ID: 576
+[2026-03-03T15:42:07.364Z] [EmitirNfce] Cashback Usado: 0
+[2026-03-03T15:42:07.365Z] [EmitirNfce] Delivery Fee: 4
+[2026-03-03T15:42:07.366Z] [EmitirNfce] Total Venda: 4
+[2026-03-03T15:42:07.367Z] [EmitirNfce] Subtotal: 0
+[2026-03-03T15:43:09.974Z] [Controller] emitirNfce. Body: {"saleId":577,"itemsOverlay":[{"id":713,"saleId":577,"productId":6,"nomeProduto":"bauru completo","quantidade":1,"precoUnitario":12.34,"subtotal":12.34,"status":"pendente","createdAt":"2026-03-03T15:42:49.143Z","preparedAt":null,"preparedById":null,"origem":"tablet","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"713","produto":{"_id":"6","id":6,"nome":"bauru completo","preco":12.34,"ncm":"21069090","cfop":"5102","csosn":"102"}}]}
+[2026-03-03T15:43:09.988Z] [EmitirNfce] Sale ID: 577
+[2026-03-03T15:43:09.990Z] [EmitirNfce] Cashback Usado: 0
+[2026-03-03T15:43:09.990Z] [EmitirNfce] Delivery Fee: 4
+[2026-03-03T15:43:09.992Z] [EmitirNfce] Total Venda: 4
+[2026-03-03T15:43:09.993Z] [EmitirNfce] Subtotal: 0
+[2026-03-03T15:55:41.146Z] [Finalize] ID: 578 (Int: 578). FreshItens: 2, FreshCV: 0
+[2026-03-03T15:55:41.149Z] [Finalize] Recalculated Subtotal: 24.34
+[2026-03-03T15:55:41.179Z] [DEBUG] Finalize - FreshCV Count: 0
+[2026-03-03T15:55:41.180Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-03-03T15:55:42.457Z] [Controller] emitirNfce. Body: {"saleId":578,"itemsOverlay":[{"id":714,"saleId":578,"productId":7,"nomeProduto":"Bauru Teste QA cozinha","quantidade":1,"precoUnitario":12,"subtotal":12,"status":"pendente","createdAt":"2026-03-03T15:55:15.116Z","preparedAt":null,"preparedById":null,"origem":"default","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"714","produto":{"_id":"7","id":7,"nome":"Bauru Teste QA cozinha","preco":12,"ncm":"21069090","cfop":"5102","csosn":"102"}},{"id":715,"saleId":578,"productId":6,"nomeProduto":"bauru completo","quantidade":1,"precoUnitario":12.34,"subtotal":12.34,"status":"pendente","createdAt":"2026-03-03T15:55:18.889Z","preparedAt":null,"preparedById":null,"origem":"default","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"715","produto":{"_id":"6","id":6,"nome":"bauru completo","preco":12.34,"ncm":"21069090","cfop":"5102","csosn":"102"}}]}
+[2026-03-03T15:55:42.510Z] [EmitirNfce] Sale ID: 578
+[2026-03-03T15:55:42.511Z] [EmitirNfce] Cashback Usado: 0
+[2026-03-03T15:55:42.512Z] [EmitirNfce] Delivery Fee: null
+[2026-03-03T15:55:42.513Z] [EmitirNfce] Total Venda: 24.34
+[2026-03-03T15:55:42.514Z] [EmitirNfce] Subtotal: 24.34
+[2026-03-03T15:57:50.121Z] [Finalize] ID: 579 (Int: 579). FreshItens: 2, FreshCV: 0
+[2026-03-03T15:57:50.123Z] [Finalize] Recalculated Subtotal: 50
+[2026-03-03T15:57:50.175Z] [DEBUG] Finalize - FreshCV Count: 0
+[2026-03-03T15:57:50.177Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
+[2026-03-03T15:57:50.239Z] [Controller] emitirNfce. Body: {"saleId":579,"itemsOverlay":[{"id":716,"saleId":579,"productId":7,"nomeProduto":"Bauru Teste QA cozinha","quantidade":2,"precoUnitario":12,"subtotal":24,"status":"pendente","createdAt":"2026-03-03T15:57:12.438Z","preparedAt":null,"preparedById":null,"origem":"default","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"716","produto":{"_id":"7","id":7,"nome":"Bauru Teste QA cozinha","preco":12,"ncm":"21069090","cfop":"5102","csosn":"102"}},{"id":717,"saleId":579,"productId":3,"nomeProduto":"bauru tche chapa","quantidade":2,"precoUnitario":13,"subtotal":26,"status":"pendente","createdAt":"2026-03-03T15:57:29.433Z","preparedAt":null,"preparedById":null,"origem":"default","variacaoOpcoes":null,"variacaoRegraPreco":null,"variacaoTipo":null,"_id":"717","produto":{"_id":"3","id":3,"nome":"bauru tche chapa","preco":13,"ncm":"21069090","cfop":"5102","csosn":"102"}}]}
+[2026-03-03T15:57:50.270Z] [EmitirNfce] Sale ID: 579
+[2026-03-03T15:57:50.271Z] [EmitirNfce] Cashback Usado: 0
+[2026-03-03T15:57:50.272Z] [EmitirNfce] Delivery Fee: null
+[2026-03-03T15:57:50.273Z] [EmitirNfce] Total Venda: 50
+[2026-03-03T15:57:50.274Z] [EmitirNfce] Subtotal: 50
+[2026-03-03T16:32:04.802Z] [Finalize] ID: 582 (Int: 582). FreshItens: 1, FreshCV: 1
+[2026-03-03T16:32:04.804Z] [Finalize] Recalculated Subtotal: 12.34
+[2026-03-03T16:32:04.826Z] [DEBUG] Finalize - FreshCV Count: 1
+[2026-03-03T16:32:04.827Z] [DEBUG] CV: 499 - dinheiro - 12.34
+[2026-03-03T16:32:04.828Z] [DEBUG] Calculated Total Cashback Usado (Fresh): 0
