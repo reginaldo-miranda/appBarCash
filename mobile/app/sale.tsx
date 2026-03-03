@@ -1303,6 +1303,9 @@ export default function SaleScreen() {
           setNomeResponsavel('');
           setMesa(null);
           setComanda(null);
+      } else {
+          // Mesmo se formos pular (NFC-e), convém limpar o visual do carrinho para que no fundo a venda pareça concluída
+          setCart([]);
       }
       setModalVisible(false);
 
@@ -1509,7 +1512,7 @@ export default function SaleScreen() {
       <View style={styles.header}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/(tabs)')}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
@@ -2057,14 +2060,14 @@ export default function SaleScreen() {
                 onPress={async () => {
                   console.log('🔥 BOTÃO FINALIZAR CLICADO!');
                   
-                  // Se já está pago, apenas finaliza
-                  if (totalRemaining <= 0.05) {
-                     console.log('✅ Tudo pago. Finalizando venda...');
+                  // Se já está pago e NÃO pediu NFCe, apenas finaliza
+                  if (totalRemaining <= 0.05 && !fastNfceOption) {
+                     console.log('✅ Tudo pago sem NFC-e. Finalizando venda...');
                      finalizeSale();
                      return;
                   }
 
-                  if (paymentMethod === 'pix') {
+                  if (totalRemaining > 0.05 && paymentMethod === 'pix') {
                       setModalVisible(false); // Fecha modal principal
                       setPixModalVisible(true); // Abre modal PIX
                       return;
@@ -2146,13 +2149,20 @@ export default function SaleScreen() {
                               const saleId = sale._id || (sale as any).id;
                               await saleService.payItems(saleId, payPayload);
                           }
-                          continueFinalizationWithNfce(0);
                       } catch(e: any) {
                            Alert.alert('Erro no Pagamento', e.message);
-                      } finally {
-                          setFinalizing(false);
-                          setModalVisible(false);
-                      }
+                           setFinalizing(false);
+                           return; // aborta
+                      } 
+                      
+                      setFinalizing(false);
+                      setModalVisible(false); // Fecha o modal principal primeiro
+                      
+                      // Aguardar a animação do Modal Web/App terminar para abrir CPF
+                      setTimeout(() => {
+                          setPendingNfcePontos(0);
+                          setCpfModalVisible(true);
+                      }, 400);
                       return;
                   }
 
@@ -2383,12 +2393,16 @@ export default function SaleScreen() {
                  if (missingProducts.length > 0) {
                      setMissingFiscalProducts(missingProducts);
                      setPendingNfcePontos(pontosUsados);
-                     // Adicionando um pequeno atraso para permitir que o PaymentSplitModal feche completamente antes de abrir a nova modal (evita travamento no mobile)
+                     // Atraso maior para melhor fluidez no mobile (evita travamento ao desmontar um modal pesado e montar outro)
                      setTimeout(() => {
                          setFiscalModalVisible(true);
-                     }, 400);
+                     }, 600);
                  } else {
-                     continueFinalizationWithNfce(pontosUsados);
+                     setPendingNfcePontos(pontosUsados || 0);
+                     // Atraso maior para o CpfModal
+                     setTimeout(() => {
+                         setCpfModalVisible(true);
+                     }, 600);
                  }
              } else {
                  // Comportamento padrão: finaliza e volta
